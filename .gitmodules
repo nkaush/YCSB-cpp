@@ -4,3 +4,6 @@
 [submodule "yaml-cpp"]
 	path = yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "splinterdb/replicated-splinterdb"]
+	path = splinterdb/replicated-splinterdb
+	url = https://github.com/nkaush/replicated-splinterdb.git
