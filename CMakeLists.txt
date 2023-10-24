@@ -119,10 +119,10 @@ endif()
 
 if (BIND_SPLINTERDB)
     message(STATUS "BIND_SPLINTERDB - ON")
-    file(GLOB_RECURSE YCSB_SPL_SRC "splinterdb/splinterdb.cc")
+    file(GLOB_RECURSE YCSB_SPL_SRC "replicated-splinterdb/replicated-splinterdb.cc")
     target_sources(ycsb PRIVATE ${YCSB_SPL_SRC})
 
-    add_subdirectory(splinterdb/replicated-splinterdb)
+    add_subdirectory(replicated-splinterdb/replicated-splinterdb)
     get_target_property(LIB_SPL_CLIENT_INCLUDES replicated-splinterdb-client INCLUDE_DIRECTORIES)
 
     target_link_libraries(ycsb PRIVATE replicated-splinterdb-client)

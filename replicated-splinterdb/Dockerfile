@@ -12,7 +12,7 @@ WORKDIR /build
 
 COPY core core
 COPY yaml-cpp yaml-cpp
-COPY splinterdb splinterdb
+COPY replicated-splinterdb replicated-splinterdb
 COPY HdrHistogram_c HdrHistogram_c
 COPY CMakeLists.txt /build
 

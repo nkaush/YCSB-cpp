@@ -1,13 +1,13 @@
-#include "splinterdb.h"
+#include "replicated_splinterdb.h"
 
 #include "core/db_factory.h"
 
 #define FIELD_DELIMITER '='
 
-const std::string PROP_HOST = "splinterdb.host";
+const std::string PROP_HOST = "replicated_splinterdb.host";
 const std::string PROP_HOST_DEFAULT = "localhost";
 
-const std::string PROP_PORT = "splinterdb.port";
+const std::string PROP_PORT = "replicated_splinterdb.port";
 const std::string PROP_PORT_DEFAULT = "10003";
 
 namespace ycsbc {
