@@ -1,2 +1,2 @@
-splinterdb/Dockerfile
-splinterdb/Makefile
+replicated-splinterdb/Dockerfile
+replicated-splinterdb/Makefile

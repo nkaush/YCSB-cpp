@@ -119,7 +119,7 @@ endif()
 
 if (BIND_SPLINTERDB)
     message(STATUS "BIND_SPLINTERDB - ON")
-    file(GLOB_RECURSE YCSB_SPL_SRC "replicated-splinterdb/replicated-splinterdb.cc")
+    file(GLOB_RECURSE YCSB_SPL_SRC "replicated-splinterdb/replicated_splinterdb.cc")
     target_sources(ycsb PRIVATE ${YCSB_SPL_SRC})
 
     add_subdirectory(replicated-splinterdb/replicated-splinterdb)

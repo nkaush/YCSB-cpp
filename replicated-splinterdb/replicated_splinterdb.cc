@@ -16,14 +16,16 @@ void ReplicatedSplinterDB::Init() {
     const utils::Properties &props = *props_;
     std::string host = props.GetProperty(PROP_HOST, PROP_HOST_DEFAULT);
     std::string port_str = props.GetProperty(PROP_PORT, PROP_PORT_DEFAULT);
-    std::cout << "Connecting to SplinterDB at " << host << ":" << port_str
-                << std::endl;
+    std::cout << "Connecting to SplinterDB cluster at " << host << ":" 
+              << port_str << std::endl;
+
     int unchecked_port = std::stoi(port_str);
     if (1 > unchecked_port || unchecked_port > 65535) {
         std::string msg = "invalid port number for host \"" + host +
                             "\": " + std::to_string(unchecked_port);
         throw std::runtime_error(msg);
     }
+
     uint16_t port = static_cast<uint16_t>(unchecked_port);
     client_ = std::make_shared<replicated_splinterdb::client>(host, port);
 }
@@ -106,10 +108,9 @@ DB::Status ReplicatedSplinterDB::Delete(const std::string &table,
 }
 
 DB *NewReplicatedSplinterDB() {
-  return new ReplicatedSplinterDB;
+    return new ReplicatedSplinterDB;
 }
 
 const bool registered = DBFactory::RegisterDB("replicated-splinterdb", NewReplicatedSplinterDB);
-
 
 } // ycsbc
