@@ -46,14 +46,8 @@ DB::Status ReplicatedSplinterDB::Read(const std::string &table,
         return DB::kError;
     }
 
-    auto it = std::find(value.begin(), value.end(), FIELD_DELIMITER);
-    if (it == value.end()) {
-        return DB::kError;
-    }
-
-    std::string field(value.begin(), it);
-    std::string val(it + 1, value.end());
-    result.emplace_back(field, val);
+    std::string field(value.begin(), value.end());
+    result.emplace_back("", field);
 
     return DB::kOK;
 }
@@ -66,11 +60,8 @@ DB::Status ReplicatedSplinterDB::Insert(const std::string &table,
         throw std::runtime_error("Insert: only one field supported!");
     }
 
-    std::vector<uint8_t> value_vec;
     auto& [field, value] = values[0];
-    value_vec.insert(value_vec.end(), field.begin(), field.end());
-    value_vec.push_back(FIELD_DELIMITER);
-    value_vec.insert(value_vec.end(), value.begin(), value.end());
+    std::vector<uint8_t> value_vec(value.begin(), value.end());
 
     auto [spl_rc, raft_rc, msg] = client_->put(key_vec, value_vec);
 

@@ -23,9 +23,9 @@ if __name__ == "__main__":
         _, nodename, _ = cachedump.split("/", 2)
         with open(cachedump, "rb") as f:
             cachecontents = f.read()
-        
-        regex_matches = re.findall(b"user\d*=", cachecontents)
-        keys_found = set(m[:-1].decode("utf-8") for m in regex_matches)
+
+        regex_matches = re.findall(b"user\d{20}", cachecontents)
+        keys_found = set(m.decode("utf-8") for m in regex_matches)
 
         dirname = f"cached-keys/{nodename}"
         os.makedirs(dirname, exist_ok=True)
