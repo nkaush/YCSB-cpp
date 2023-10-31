@@ -238,7 +238,7 @@ void CoreWorkload::BuildValues(std::vector<ycsbc::DB::Field> &values) {
 void CoreWorkload::BuildSingleValue(std::vector<ycsbc::DB::Field> &values) {
   values.push_back(DB::Field());
   ycsbc::DB::Field &field = values.back();
-  // field.first.append(NextFieldName());
+  field.first.append(NextFieldName());
   uint64_t len = field_len_generator_->Next();
   field.second.reserve(len);
   RandomByteGenerator byte_generator;

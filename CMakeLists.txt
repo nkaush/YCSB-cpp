@@ -25,6 +25,7 @@ option(BIND_ROCKSDB "build with rocksdb" OFF)
 option(BIND_LMDB "build with lmdb" OFF)
 option(BIND_LEVELDB "build with leveldb" OFF)
 option(BIND_WIREDTIGER "build with wiredtiger" OFF)
+option(BIND_RETHINKDB "build with rethinkdb" OFF)
 option(BIND_SPLINTERDB "build with replicated-splinterdb" OFF)
 
 option(WITH_ZLIB "linking YCSB with zlib; needed by HdrHISTOGRAM, DO NOT TURN OFF" ON)
@@ -116,6 +117,24 @@ if (BIND_WIREDTIGER)
 else()
     message(STATUS "BIND_WIREDTIGER - OFF")
 endif()
+
+if (BIND_RETHINKDB)
+    message(STATUS "BIND_RETHINKDB - ON")
+    file(GLOB_RECURSE YCSB_RETHINK_SRC "rethinkdb/rethinkdb_binding.cc")
+    target_sources(ycsb PRIVATE ${YCSB_RETHINK_SRC})
+
+    add_custom_target(
+        librethinkdb++ ALL 
+        COMMAND ${CMAKE_MAKE_PROGRAM} INCLUDE_PYTHON_DOCS=yes
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx
+    )
+
+    target_link_libraries(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx/build/librethinkdb++.a)
+    target_include_directories(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx/build/include)
+else()
+    message(STATUS "BIND_SPLINTERDB - OFF")
+endif()
+
 
 if (BIND_SPLINTERDB)
     message(STATUS "BIND_SPLINTERDB - ON")

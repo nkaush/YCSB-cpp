@@ -7,3 +7,6 @@
 [submodule "replicated-splinterdb/replicated-splinterdb"]
 	path = replicated-splinterdb/replicated-splinterdb
 	url = https://github.com/nkaush/replicated-splinterdb.git
+[submodule "rethinkdb/librethinkdbxx"]
+	path = rethinkdb/librethinkdbxx
+	url = https://github.com/AtnNn/librethinkdbxx
