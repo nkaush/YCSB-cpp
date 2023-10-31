@@ -15,8 +15,6 @@ const std::string DURABILITY_OPT_ARG = "durability";
 const std::string PROP_DURABILITY = "rethinkdb.durability";
 const std::string PROP_DURABILITY_DEFAULT = "soft";
 
-using KVP = std::pair<std::string, R::Datum>;
-
 namespace ycsbc {
 
 void RethinkDBBinding::Init() {
