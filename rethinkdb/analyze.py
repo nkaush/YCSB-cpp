@@ -19,9 +19,8 @@ def find_similarity(keysets: List[set]) -> float:
 if __name__ == "__main__":
     caches = {}
 
-    for cachedump in glob.glob("dumps/rethink*/cache.*"):
+    for cachedump in glob.glob("dumps/rethink*/*.*"):
         _, nodename, ts = cachedump.split("/", 2)
-        _, ts = ts.split(".")
         with open(cachedump, "rb") as f:
             cachecontents = f.read()
 
