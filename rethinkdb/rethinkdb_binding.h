@@ -39,7 +39,8 @@ class RethinkDBBinding : public DB {
 
   private:
     std::unique_ptr<R::Connection> conn_;
-    R::Term durability_ = R::Term("hard");
+    R::Term durability_ = R::Term("soft");
+    R::Term read_mode_ = R::Term("outdated");
 };
 
 } // ycsbc

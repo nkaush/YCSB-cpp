@@ -15,17 +15,28 @@ const std::string DURABILITY_OPT_ARG = "durability";
 const std::string PROP_DURABILITY = "rethinkdb.durability";
 const std::string PROP_DURABILITY_DEFAULT = "soft";
 
+const std::string READ_MODE_OPT_ARG = "read_mode";
+const std::string PROP_READ_MODE = "rethinkdb.read_mode";
+const std::string PROP_READ_MODE_DEFAULT = "outdated";
+
 namespace ycsbc {
 
 void RethinkDBBinding::Init() {
     const utils::Properties &props = *props_;
 
     std::string durability = props.GetProperty(PROP_DURABILITY, PROP_DURABILITY_DEFAULT);
+    std::string read_mode = props.GetProperty(PROP_READ_MODE, PROP_READ_MODE_DEFAULT);
+
     if (durability != "hard" && durability != "soft") {
-        throw std::runtime_error("rethinkdb.durability must be one of ['hard' | 'soft']");
+        throw std::runtime_error("rethinkdb.durability must be one of [ hard | soft ]");
+    }
+
+    if (read_mode != "single" && read_mode != "majority" && read_mode != "outdated") {
+        throw std::runtime_error("rethinkdb.read_mode must be one of [ single | majority | outdated ]");
     }
 
     durability_ = R::Term(durability);
+    read_mode_ = R::Term(read_mode);
 
     std::string host = props.GetProperty(PROP_HOST, PROP_HOST_DEFAULT);
     std::string port_str = props.GetProperty(PROP_PORT, PROP_PORT_DEFAULT);
@@ -51,7 +62,9 @@ DB::Status RethinkDBBinding::Read(const std::string &table,
                                   const std::string &key,
                                   const std::vector<std::string> *fields,
                                   std::vector<Field> &result) {
-    R::Cursor cursor = R::table(table).get(key).run(*conn_);
+    R::Cursor cursor = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
+        .get(key)
+        .run(*conn_);
 
     if (!cursor.is_single()) {
         throw std::runtime_error("Expected a single document");
@@ -80,7 +93,7 @@ DB::Status RethinkDBBinding::Update(const std::string &table,
         to_update.emplace(f, R::Datum(v));
     }
 
-    R::Datum result = R::table(table)
+    R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
         .update(to_update, {{DURABILITY_OPT_ARG, durability_}})
         .run(*conn_)
@@ -116,7 +129,7 @@ DB::Status RethinkDBBinding::Insert(const std::string &table,
 
 DB::Status RethinkDBBinding::Delete(const std::string &table,
                                         const std::string &key) {
-    R::Datum result = R::table(table)
+    R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
         .delete_({{DURABILITY_OPT_ARG, durability_}})
         .run(*conn_)
