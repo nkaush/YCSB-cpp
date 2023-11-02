@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.10)
 project(ycsb-cpp LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 set(CompilerFlags
         CMAKE_CXX_FLAGS
         CMAKE_CXX_FLAGS_DEBUG
@@ -25,6 +25,7 @@ option(BIND_ROCKSDB "build with rocksdb" OFF)
 option(BIND_LMDB "build with lmdb" OFF)
 option(BIND_LEVELDB "build with leveldb" OFF)
 option(BIND_WIREDTIGER "build with wiredtiger" OFF)
+option(BIND_RETHINKDB "build with rethinkdb" OFF)
 
 option(WITH_ZLIB "linking YCSB with zlib; needed by HdrHISTOGRAM, DO NOT TURN OFF" ON)
 option(WITH_LZ4 "linking YCSB with lz4" OFF)
@@ -116,6 +117,23 @@ else()
     message(STATUS "BIND_WIREDTIGER - OFF")
 endif()
 
+if (BIND_RETHINKDB)
+    message(STATUS "BIND_RETHINKDB - ON")
+    file(GLOB_RECURSE YCSB_RETHINK_SRC "rethinkdb/rethinkdb_binding.cc")
+    target_sources(ycsb PRIVATE ${YCSB_RETHINK_SRC})
+
+    add_custom_target(
+        librethinkdb++ ALL 
+        COMMAND ${CMAKE_MAKE_PROGRAM} INCLUDE_PYTHON_DOCS=yes
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx
+    )
+
+    target_link_libraries(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx/build/librethinkdb++.a)
+    target_include_directories(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx/build/include)
+else()
+    message(STATUS "BIND_RETHINKDB - OFF")
+endif()
+
 if(WITH_ZLIB)
     message(STATUS "WITH_ZLIB - ON")
     find_package(ZLIB)
@@ -196,6 +214,11 @@ endif()
 
 add_subdirectory(HdrHistogram_c)
 include_directories(HdrHistogram_c/include)
+
+add_subdirectory(yaml-cpp)
+include_directories(yaml-cpp/include)
+
 add_compile_definitions(HDRMEASUREMENT)
 add_dependencies(ycsb hdr_histogram_static)
 target_link_libraries(ycsb PRIVATE hdr_histogram_static)
+target_link_libraries(ycsb PRIVATE yaml-cpp)
