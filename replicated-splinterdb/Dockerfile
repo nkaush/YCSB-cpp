@@ -16,7 +16,8 @@ COPY replicated-splinterdb replicated-splinterdb
 COPY HdrHistogram_c HdrHistogram_c
 COPY CMakeLists.txt /build
 
-RUN cmake -DBIND_SPLINTERDB=ON . && make -j `nproc`
+RUN make -C replicated-splinterdb/replicated-splinterdb/third-party/splinterdb BUILD_VERBOSE=1 LIBDIR=/build /build/libsplinterdb.so -j `nproc` \
+    && cmake -DBIND_SPLINTERDB=ON . && make -j `nproc`
 
 FROM neilk3/splinterdb-run-env as run
 

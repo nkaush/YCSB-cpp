@@ -22,3 +22,12 @@ docker run --rm -it \
     --entrypoint /bin/bash \
     neilk3/replicated-splinterdb
 ```
+
+
+1. make all
+2. ./replicated-splinterdb/start_servers.sh 250
+3. docker run -it --rm --network splinterdb-network neilk3/ycsb-replicated-splinterdb -s -load -db replicated-splinterdb -p replicated_splinterdb.host=replicated-splinterdb-node-1 -threads 10 -P 700k 
+4. ./replicated-splinterdb/client.sh 1 -e dumpcache
+4. ./replicated-splinterdb/client.sh 1 -e clearcache
+cp -r caches caches-old
+4. ./replicated-splinterdb/client.sh 1 -e dumpcache
