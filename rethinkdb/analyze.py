@@ -3,6 +3,7 @@ from functools import reduce
 from typing import List
 
 import glob
+import sys
 import os
 import re
 
@@ -19,8 +20,9 @@ def find_similarity(keysets: List[set]) -> float:
 if __name__ == "__main__":
     caches = {}
 
-    for cachedump in glob.glob("dumps/rethink*/*.*"):
-        _, nodename, ts = cachedump.split("/", 2)
+    for cachedump in glob.glob(f"dumps/rethink*/{sys.argv[1]}-*"):
+        _, nodename, leaf = cachedump.split("/", 2)
+        workload, ts = leaf.split("-")
         with open(cachedump, "rb") as f:
             cachecontents = f.read()
 
@@ -31,7 +33,7 @@ if __name__ == "__main__":
         dirname = f"cached-keys/{nodename}"
         os.makedirs(dirname, exist_ok=True)
 
-        with open(f"{dirname}/{ts}", "w") as f:
+        with open(f"{dirname}/{leaf}", "w") as f:
             f.write("\n".join(keys_found))
 
         caches[nodename] = keys_found
