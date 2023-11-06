@@ -75,7 +75,9 @@ void RethinkDBBinding::Init() {
     if (read_policy == "round_robin") {
         rp_ = std::make_unique<RoundRoubinReadPolicy>(std::move(cl));
     } else if (read_policy == "random") {
-
+        rp_ = std::make_unique<RandomReadPolicy>(std::move(cl));
+    } else {
+        throw std::runtime_error("rethinkdb.read_policy must be one of [ round_robin | random ]");
     }
 
     durability_ = R::Term(durability);
