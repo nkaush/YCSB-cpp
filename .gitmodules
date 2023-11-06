@@ -4,6 +4,3 @@
 [submodule "yaml-cpp"]
 	path = yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "rethinkdb/librethinkdbxx"]
-	path = rethinkdb/librethinkdbxx
-	url = https://github.com/AtnNn/librethinkdbxx

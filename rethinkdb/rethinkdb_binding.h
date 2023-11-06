@@ -1,5 +1,5 @@
-#ifndef YCSB_C_REPLICATED_SPLINTERDB_H_
-#define YCSB_C_REPLICATED_SPLINTERDB_H_
+#ifndef YCSB_C_RETHINKDB_H_
+#define YCSB_C_RETHINKDB_H_
 
 #include "core/db.h"
 
@@ -43,6 +43,6 @@ class RethinkDBBinding : public DB {
     R::Term read_mode_ = R::Term("outdated");
 };
 
-} // ycsbc
+}  // namespace ycsbc
 
-#endif // YCSB_C_REDIS_DB_H_
+#endif // YCSB_C_RETHINKDB_H_
