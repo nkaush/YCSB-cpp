@@ -12,7 +12,7 @@ class ReadPolicy {
   public:
     using ConnectionList = std::vector<std::unique_ptr<RethinkDB::Connection>>;
 
-    ReadPolicy(ConnectionList&& cl) : cl_(cl) {}
+    ReadPolicy(ConnectionList&& cl) : cl_(std::forward<ConnectionList>(cl)) {}
     virtual ~ReadPolicy() {}
     virtual size_t Next() = 0;
     RethinkDB::Connection& GetNext() { return *cl_[Next()]; }

@@ -8,7 +8,7 @@
 using std::string;
 
 const string PROP_HOSTS = "rethinkdb.hosts";
-const string PROP_HOSTS_DEFAULT = "localhost:28015";
+const string PROP_HOSTS_DEFAULT = "localhost";
 const int DEFAULT_PORT = 28015;
 
 const string DURABILITY_OPT_ARG = "durability";
@@ -46,8 +46,7 @@ std::pair<string, int> ExtractHostAndPort(const std::string& endpoint) {
         return {endpoint, DEFAULT_PORT};
     }
 
-    int port = std::stoi(endpoint.substr(pos+1));
-    return 
+    return {endpoint.substr(0, pos), std::stoi(endpoint.substr(pos+1))};
 }
 
 void RethinkDBBinding::Init() {
@@ -65,8 +64,16 @@ void RethinkDBBinding::Init() {
         throw std::runtime_error("rethinkdb.read_mode must be one of [ single | majority | outdated ]");
     }
 
+    string comma_sep_hosts = props.GetProperty(PROP_HOSTS, PROP_HOSTS_DEFAULT);
+    ReadPolicy::ConnectionList cl;
+
+    SplitString(comma_sep_hosts, ',', [&cl](const std::string& s, size_t pos, size_t len) {
+        auto hp = ExtractHostAndPort({s, pos, len});
+        cl.emplace_back(R::connect(hp.first, hp.second));
+    });
+
     if (read_policy == "round_robin") {
-        
+        rp_ = std::make_unique<RoundRoubinReadPolicy>(std::move(cl));
     } else if (read_policy == "random") {
 
     }
@@ -74,24 +81,12 @@ void RethinkDBBinding::Init() {
     durability_ = R::Term(durability);
     read_mode_ = R::Term(read_mode);
 
-    string host = props.GetProperty(PROP_HOSTS, PROP_HOSTS_DEFAULT);
-    string port_str = props.GetProperty(PROP_PORT, PROP_PORT_DEFAULT);
-    std::cout << "Connecting to RethinkDB cluster at " << host << ":" 
-              << port_str << std::endl;
-
-    int port = std::stoi(port_str);
-    if (1 > port || port > 65535) {
-        string msg = "invalid port number for host \"" + host +
-                            "\": " + std::to_string(port);
-        throw std::runtime_error(msg);
-    }
-
-    try {
-        conn_ = R::connect(host, port);
-    } catch (std::exception& e) {
-        std::cout << e.what() << std::endl;
-        exit(1);
-    }
+    // try {
+    //     conn_ = R::connect(host, port);
+    // } catch (std::exception& e) {
+    //     std::cout << e.what() << std::endl;
+    //     exit(1);
+    // }
 }
 
 DB::Status RethinkDBBinding::Read(const string &table,
@@ -100,7 +95,7 @@ DB::Status RethinkDBBinding::Read(const string &table,
                                   std::vector<Field> &result) {
     R::Cursor cursor = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
-        .run(*conn_);
+        .run(rp_->GetNext());
 
     if (!cursor.is_single()) {
         throw std::runtime_error("Expected a single document");
@@ -132,7 +127,7 @@ DB::Status RethinkDBBinding::Update(const string &table,
     R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
         .update(to_update, {{DURABILITY_OPT_ARG, durability_}})
-        .run(*conn_)
+        .run(rp_->GetNext())
         .to_datum();
 
     auto inserted = result.extract_field("inserted").extract_number() == 0.0;
@@ -152,7 +147,7 @@ DB::Status RethinkDBBinding::Insert(const string &table,
 
     R::Datum result = R::table(table)
         .insert(to_insert, {{DURABILITY_OPT_ARG, durability_}})
-        .run(*conn_)
+        .run(rp_->GetNext())
         .to_datum();
     
     auto inserted = result.extract_field("inserted").extract_number();
@@ -168,7 +163,7 @@ DB::Status RethinkDBBinding::Delete(const string &table,
     R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
         .delete_({{DURABILITY_OPT_ARG, durability_}})
-        .run(*conn_)
+        .run(rp_->GetNext())
         .to_datum();
     
     auto deleted = result.extract_field("deleted").extract_number();
