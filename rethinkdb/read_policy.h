@@ -43,7 +43,7 @@ class RandomReadPolicy : public ReadPolicy {
     size_t Next() {
       return rand() % num_connections();
     };
-}
+};
 
 }  // namespace ycsbc
 
