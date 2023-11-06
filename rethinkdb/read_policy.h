@@ -2,6 +2,7 @@
 #define YCSB_C_READ_POLICY_H_
 
 #include <memory>
+#include <random>
 
 #include "rethinkdb.h"
 
@@ -32,9 +33,17 @@ class RoundRoubinReadPolicy : public ReadPolicy {
       return ret;
     }
   private:
-    std::vector<std::unique_ptr<RethinkDB::Connection>> conns_;
     size_t rri_;
 };
+
+class RandomReadPolicy : public ReadPolicy {
+  public:
+    RandomReadPolicy(ConnectionList&& cl) : ReadPolicy(std::forward<ReadPolicy::ConnectionList>(cl)) {}
+    
+    size_t Next() {
+      return rand() % num_connections();
+    };
+}
 
 }  // namespace ycsbc
 
