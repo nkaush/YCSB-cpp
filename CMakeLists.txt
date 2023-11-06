@@ -127,6 +127,7 @@ if (BIND_RETHINKDB)
         COMMAND ${CMAKE_MAKE_PROGRAM} INCLUDE_PYTHON_DOCS=yes
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx
     )
+    add_dependencies(ycsb librethinkdb++)
 
     target_link_libraries(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx/build/librethinkdb++.a)
     target_include_directories(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx/build/include)
