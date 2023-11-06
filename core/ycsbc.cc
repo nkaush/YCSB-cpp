@@ -328,8 +328,8 @@ void UsageMessage(const char *command) {
 
 void SaveRunSummary(YAML::Node &node, ycsbc::utils::Properties &props, std::time_t &now, const bool is_load) { // ADD A FLAG HERE FOR IS_LOAD OR IS_RUN PHASE COMPLETED
   std::string yaml_name = props.GetProperty(YAML_NAME_PROPERTY);
-  std::string load_phase_str = "load_phase";
-  std::string run_phase_str = "run_phase";
+  std::string load_phase_str = "load_phase:";
+  std::string run_phase_str = "run_phase:";
 
   if (yaml_name.empty()) {
     std::stringstream name_s;
@@ -337,12 +337,11 @@ void SaveRunSummary(YAML::Node &node, ycsbc::utils::Properties &props, std::time
     yaml_name.append(name_s.str());
   }
   if is_load {
-    load_phase_str.append(yaml_name);
+    yaml_name = load_phase_str + yaml_name
   } else {
-    run_phase_str.append(yaml_name);
+    yaml_name = run_phase_str + yaml_name
   }
   yaml_name.append(".yml");
-  yaml_name = load_phase_str;
   std::ofstream yaml_file;
   yaml_file.open(yaml_name);
   yaml_file << node << std::endl;
