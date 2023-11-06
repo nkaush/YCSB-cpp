@@ -5,47 +5,83 @@
 
 #include "core/db_factory.h"
 
-const std::string PROP_HOST = "rethinkdb.host";
-const std::string PROP_HOST_DEFAULT = "localhost";
+using std::string;
 
-const std::string PROP_PORT = "rethinkdb.port";
-const std::string PROP_PORT_DEFAULT = "28015";
+const string PROP_HOSTS = "rethinkdb.hosts";
+const string PROP_HOSTS_DEFAULT = "localhost:28015";
+const int DEFAULT_PORT = 28015;
 
-const std::string DURABILITY_OPT_ARG = "durability";
-const std::string PROP_DURABILITY = "rethinkdb.durability";
-const std::string PROP_DURABILITY_DEFAULT = "soft";
+const string DURABILITY_OPT_ARG = "durability";
+const string PROP_DURABILITY = "rethinkdb.durability";
+const string PROP_DURABILITY_DEFAULT = "soft";
 
-const std::string READ_MODE_OPT_ARG = "read_mode";
-const std::string PROP_READ_MODE = "rethinkdb.read_mode";
-const std::string PROP_READ_MODE_DEFAULT = "outdated";
+const string READ_MODE_OPT_ARG = "read_mode";
+const string PROP_READ_MODE = "rethinkdb.read_mode";
+const string PROP_READ_MODE_DEFAULT = "outdated";
+const std::array<string, 3> READ_MODES = {"single", "majority", "outdated"};
+
+const string PROP_READ_POLICY = "rethinkdb.read_policy";
+const string PROP_READ_POLICY_DEFAULT = "round_robin";
 
 namespace ycsbc {
+
+template<typename StringFunction>
+static void SplitString(const string &str, char delimiter, StringFunction f) {
+    std::size_t from = 0;
+    for (std::size_t i = 0; i < str.size(); ++i) {
+        if (str[i] == delimiter) {
+            f(str, from, i);
+            from = i + 1;
+        }
+    }
+
+    if (from <= str.size()) {
+        f(str, from, str.size());
+    }
+}
+
+std::pair<string, int> ExtractHostAndPort(const std::string& endpoint) {
+    size_t pos = endpoint.find(':');
+    if (pos == string::npos) {
+        return {endpoint, DEFAULT_PORT};
+    }
+
+    int port = std::stoi(endpoint.substr(pos+1));
+    return 
+}
 
 void RethinkDBBinding::Init() {
     const utils::Properties &props = *props_;
 
-    std::string durability = props.GetProperty(PROP_DURABILITY, PROP_DURABILITY_DEFAULT);
-    std::string read_mode = props.GetProperty(PROP_READ_MODE, PROP_READ_MODE_DEFAULT);
+    string durability = props.GetProperty(PROP_DURABILITY, PROP_DURABILITY_DEFAULT);
+    string read_mode = props.GetProperty(PROP_READ_MODE, PROP_READ_MODE_DEFAULT);
+    string read_policy = props.GetProperty(PROP_READ_POLICY, PROP_READ_POLICY_DEFAULT);
 
     if (durability != "hard" && durability != "soft") {
         throw std::runtime_error("rethinkdb.durability must be one of [ hard | soft ]");
     }
 
-    if (read_mode != "single" && read_mode != "majority" && read_mode != "outdated") {
+    if (std::find(READ_MODES.begin(), READ_MODES.end(), read_mode) == READ_MODES.end()) {
         throw std::runtime_error("rethinkdb.read_mode must be one of [ single | majority | outdated ]");
+    }
+
+    if (read_policy == "round_robin") {
+        
+    } else if (read_policy == "random") {
+
     }
 
     durability_ = R::Term(durability);
     read_mode_ = R::Term(read_mode);
 
-    std::string host = props.GetProperty(PROP_HOST, PROP_HOST_DEFAULT);
-    std::string port_str = props.GetProperty(PROP_PORT, PROP_PORT_DEFAULT);
+    string host = props.GetProperty(PROP_HOSTS, PROP_HOSTS_DEFAULT);
+    string port_str = props.GetProperty(PROP_PORT, PROP_PORT_DEFAULT);
     std::cout << "Connecting to RethinkDB cluster at " << host << ":" 
               << port_str << std::endl;
 
     int port = std::stoi(port_str);
     if (1 > port || port > 65535) {
-        std::string msg = "invalid port number for host \"" + host +
+        string msg = "invalid port number for host \"" + host +
                             "\": " + std::to_string(port);
         throw std::runtime_error(msg);
     }
@@ -58,9 +94,9 @@ void RethinkDBBinding::Init() {
     }
 }
 
-DB::Status RethinkDBBinding::Read(const std::string &table,
-                                  const std::string &key,
-                                  const std::vector<std::string> *fields,
+DB::Status RethinkDBBinding::Read(const string &table,
+                                  const string &key,
+                                  const std::vector<string> *fields,
                                   std::vector<Field> &result) {
     R::Cursor cursor = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
@@ -77,7 +113,7 @@ DB::Status RethinkDBBinding::Read(const std::string &table,
             result.emplace_back(f, v.extract_string());
         }
     } else {
-        for (const std::string& f : *fields) {
+        for (const string& f : *fields) {
             result.emplace_back(f, document.extract_field(f).extract_string());
         }
     }
@@ -85,10 +121,10 @@ DB::Status RethinkDBBinding::Read(const std::string &table,
     return DB::kOK;
 }
 
-DB::Status RethinkDBBinding::Update(const std::string &table,
-                                    const std::string &key,
+DB::Status RethinkDBBinding::Update(const string &table,
+                                    const string &key,
                                     std::vector<DB::Field> &values) {
-    std::map<std::string, R::Datum> to_update;
+    std::map<string, R::Datum> to_update;
     for (auto& [f, v] : values) {
         to_update.emplace(f, R::Datum(v));
     }
@@ -106,10 +142,10 @@ DB::Status RethinkDBBinding::Update(const std::string &table,
     return inserted && deleted && errors ? DB::kOK : DB::kError;
 }
 
-DB::Status RethinkDBBinding::Insert(const std::string &table,
-                                    const std::string &key,
+DB::Status RethinkDBBinding::Insert(const string &table,
+                                    const string &key,
                                     std::vector<DB::Field> &values) {
-    std::map<std::string, R::Datum> to_insert = {{"id", R::Datum(key)}};
+    std::map<string, R::Datum> to_insert = {{"id", R::Datum(key)}};
     for (auto& [f, v] : values) {
         to_insert.emplace(f, R::Datum(v));
     }
@@ -127,8 +163,8 @@ DB::Status RethinkDBBinding::Insert(const std::string &table,
     return DB::kOK;
 }
 
-DB::Status RethinkDBBinding::Delete(const std::string &table,
-                                        const std::string &key) {
+DB::Status RethinkDBBinding::Delete(const string &table,
+                                        const string &key) {
     R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
         .delete_({{DURABILITY_OPT_ARG, durability_}})

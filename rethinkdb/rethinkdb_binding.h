@@ -10,6 +10,7 @@
 #include "core/properties.h"
 
 #include "rethinkdb.h"
+#include "read_policy.h"
 
 namespace R = RethinkDB;
 
@@ -38,7 +39,7 @@ class RethinkDBBinding : public DB {
     Status Delete(const std::string &table, const std::string &key) override;
 
   private:
-    std::unique_ptr<R::Connection> conn_;
+    std::unique_ptr<ReadPolicy> rp_ = nullptr;
     R::Term durability_ = R::Term("soft");
     R::Term read_mode_ = R::Term("outdated");
 };

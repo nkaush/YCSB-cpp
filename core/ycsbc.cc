@@ -32,7 +32,7 @@ const std::string YAML_NAME_PROPERTY = "yamlname";
 void UsageMessage(const char *command);
 bool StrStartWith(const char *str, const char *pre);
 void ParseCommandLine(int argc, const char *argv[], ycsbc::utils::Properties &props);
-void SaveRunSummary(YAML::Node &node, ycsbc::utils::Properties &props, std::time_t &now);
+void SaveRunSummary(YAML::Node &node, ycsbc::utils::Properties &props, std::time_t &now, const bool is_load);
 
 void StatusThread(ycsbc::Measurements *measurements, CountDownLatch *latch, CountDownLatch *init_latch, int interval, int interval_us, const std::string &tracefilename) {
   using namespace std::chrono;
@@ -161,7 +161,7 @@ int main(const int argc, const char *argv[]) {
     load_summary["workload"] = props.GetProperty(ycsbc::WorkloadFactory::WORKLOAD_NAME_PROPERTY,
                                                 ycsbc::WorkloadFactory::WORKLOAD_NAME_DEFAULT);
     measurements->Emit(load_summary);
-    SaveRunSummary(load_summary, props, now_c, do_load);
+    SaveRunSummary(load_summary, props, now_c, true);
   }
   // Output 'LOAD PHASE DONE' to logfile
   measurements->Reset();
@@ -328,19 +328,21 @@ void UsageMessage(const char *command) {
 
 void SaveRunSummary(YAML::Node &node, ycsbc::utils::Properties &props, std::time_t &now, const bool is_load) { // ADD A FLAG HERE FOR IS_LOAD OR IS_RUN PHASE COMPLETED
   std::string yaml_name = props.GetProperty(YAML_NAME_PROPERTY);
-  std::string load_phase_str = "load_phase:";
-  std::string run_phase_str = "run_phase:";
+  std::string load_phase_str = "load-";
+  std::string run_phase_str = "run-";
 
   if (yaml_name.empty()) {
     std::stringstream name_s;
     name_s << std::put_time(std::localtime(&now), "%Y%m%d%s");
     yaml_name.append(name_s.str());
   }
-  if is_load {
-    yaml_name = load_phase_str + yaml_name
+
+  if (is_load) {
+    yaml_name = load_phase_str + yaml_name;
   } else {
-    yaml_name = run_phase_str + yaml_name
+    yaml_name = run_phase_str + yaml_name;
   }
+
   yaml_name.append(".yml");
   std::ofstream yaml_file;
   yaml_file.open(yaml_name);
