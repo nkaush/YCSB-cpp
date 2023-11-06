@@ -82,13 +82,6 @@ void RethinkDBBinding::Init() {
 
     durability_ = R::Term(durability);
     read_mode_ = R::Term(read_mode);
-
-    // try {
-    //     conn_ = R::connect(host, port);
-    // } catch (std::exception& e) {
-    //     std::cout << e.what() << std::endl;
-    //     exit(1);
-    // }
 }
 
 DB::Status RethinkDBBinding::Read(const string &table,
