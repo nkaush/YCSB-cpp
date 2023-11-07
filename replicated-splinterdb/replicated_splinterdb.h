@@ -37,6 +37,7 @@ class ReplicatedSplinterDB : public DB {
 
     Status Delete(const std::string &table, const std::string &key) override;
 
+    void PostLoadCallback() override; 
   private:
     std::shared_ptr<replicated_splinterdb::client> client_;
 };

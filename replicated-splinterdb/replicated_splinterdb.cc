@@ -98,6 +98,11 @@ DB::Status ReplicatedSplinterDB::Delete(const std::string &table,
     return DB::kOK;
 }
 
+void ReplicatedSplinterDB::PostLoadCallback() {
+    client_->trigger_cache_dumps("cachedump-load");
+    client_->trigger_cache_clear();
+}
+
 DB *NewReplicatedSplinterDB() {
     return new ReplicatedSplinterDB;
 }

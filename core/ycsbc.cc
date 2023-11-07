@@ -165,6 +165,14 @@ int main(const int argc, const char *argv[]) {
   }
 
   measurements->Reset();
+
+  if (do_load && do_transaction) {
+    ycsbc::DB *db = ycsbc::DBFactory::CreateDB(&props, measurements);
+    db->Init();
+    db->PostLoadCallback();
+    delete db;
+  }
+
   std::this_thread::sleep_for(std::chrono::seconds(stoi(props.GetProperty("sleepafterload", "0"))));
 
   // transaction phase
