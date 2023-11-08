@@ -37,10 +37,10 @@ DB::Status ReplicatedSplinterDB::Read(const std::string &table,
     std::vector<uint8_t> key_vec(key.begin(), key.end());
     auto [value, spl_rc] = client_->get(key_vec);
 
-    if (spl_rc != 0) {
-        std::cerr << "SplinterDB error (rc=" << spl_rc << ")" << std::endl;
-        return DB::kError;
-    }
+    // if (spl_rc != 0) {
+    //     std::cerr << "SplinterDB error (rc=" << spl_rc << ")" << std::endl;
+    //     return DB::kError;
+    // }
 
     if (value.empty()) {
         return DB::kError;

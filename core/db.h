@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace ycsbc {
 
@@ -101,7 +102,9 @@ class DB {
   /// A callback invoked after the load state and before the run stage.
   /// This callback is only invoked if both the load and run stage are invoked.
   ///
-  virtual void PostLoadCallback() {}
+  virtual void PostLoadCallback() {
+    std::cout << "base" << std::endl;
+  }
 
   virtual ~DB() { }
 

@@ -89,6 +89,8 @@ class DBWrapper : public DB {
   }
 
   bool ReInitBeforeTransaction() override { return db_->ReInitBeforeTransaction(); }
+
+  void PostLoadCallback() override { db_->PostLoadCallback(); }
  private:
   DB *db_;
   Measurements *measurements_;
