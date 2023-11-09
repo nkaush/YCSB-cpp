@@ -9,7 +9,7 @@
 #include <memory>
 #include "core/properties.h"
 
-#include "client/client.h"
+#include "replicated-splinterdb/client/client.h"
 
 namespace ycsbc {
 
