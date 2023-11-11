@@ -38,6 +38,8 @@ class RethinkDBBinding : public DB {
 
     Status Delete(const std::string &table, const std::string &key) override;
 
+    bool ReInitBeforeTransaction() override { return true; }
+
   private:
     std::unique_ptr<ReadPolicy> rp_ = nullptr;
     R::Term durability_ = R::Term("soft");

@@ -27,24 +27,14 @@ if __name__ == "__main__":
     command = sys.argv[1].lower()
     args = parse_args(sys.argv[2:])
     conn = r.connect(host=args.host, port=args.port, db=args.db)
-
-    dbs_avail = set(r.db_list().run(conn))
-    if args.db not in dbs_avail:
-        print(f"Db {args.db} dne. Creating now...")
-        r.db_create(args.db).run(conn)
-
+    
     if command == "create":
-        try:
-            result = r.db(args.db).table_create(
-                    args.table,
-                    replicas=3,
-                    durability=args.durability
-                ).run(conn)
-            assert result["tables_created"] == 1
-        except r.errors.ReqlOpFailedError as err:
-            print(f"Error with table creation: {err}.")
-            exit(1)
-
+        result = r.db("test").table_create(
+                args.table,
+                replicas=3,
+                durability=args.durability
+            ).run(conn)
+        assert result["tables_created"] == 1
     elif command == "drop":
         tables = r.table_list().run(conn)
         if args.table in tables:
