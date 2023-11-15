@@ -37,4 +37,4 @@ print(total_opps)
 
 with open(args.file, "a") as f:
 	print(f"total misses in {phase} phase = {total_miss}. Total opps in the {phase} phase = {total_opps} Miss rate = {total_miss/total_opps}")
-	f.write(f"total misses in {phase} phase = {total_miss}. Total opps in the {phase} phase = {total_opps} Miss rate = {total_miss/total_opps}\n")
+	f.write(f"{phase}={total_miss/total_opps}\n")

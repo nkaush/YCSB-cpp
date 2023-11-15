@@ -3,7 +3,7 @@
 echo -n > Missrate.txt
 
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <workload file> <random | roundrobin>"
+    echo "Usage: $0 <workload file> <random | roundrobin | hash>"
     return
 fi
 
@@ -18,8 +18,8 @@ length=${#WORKLOAD}
 export WORKLOAD_NUM=${WORKLOAD:length-1:1}
 export READ_POLICY=$2
 
-if [ "$READ_POLICY" != "random" ] && [ "$READ_POLICY" != "roundrobin" ]; then
-    echo "Usage: $0 <workload file> <random | roundrobin>"
+if [ "$READ_POLICY" != "random" ] && [ "$READ_POLICY" != "roundrobin" ] && [ "$READ_POLICY" != "hash" ]; then
+    echo "Usage: $0 <workload file> <random | roundrobin | hash>"
     return
 fi
 
@@ -38,6 +38,10 @@ fi
 function start_cluster() {
     for index in "${!DRIVERPORTS[@]}"
     do
+        if [ ! -d "node-$index" ]; then
+            mkdir "node-$index"
+        fi
+
         if [ "$index" -eq 0 ]; then
             $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 150 --bind all &
             sleep 1
@@ -58,9 +62,10 @@ sleep 5
 echo -n > Missrate.txt
 
 # 3. run ycsb workload load phase 
-../build/ycsb -s -db rethinkdb -load -threads 30 \
+../build/ycsb -s -db rethinkdb -load -threads 50 \
     -P $WORKLOAD \
     -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017 \
+    -p rethinkdb.read_policy=$READ_POLICY
 
 # 4. After load is done, kill all 3 rethink servers. WARNING, This will kill ALL rethinkdb instances, not just the ones spawned by this script. Use the pid array for more granularity.
 pkill -f rethinkdb
@@ -85,7 +90,8 @@ sleep 10
 # 8. Run ycsb workload run phase, repeat steps 4-6 for the run phase. NO NEED ANYMORE, OG COMMAND RUNS BOTH
 ../build/ycsb -s -db rethinkdb -t -threads 30 \
     -P $WORKLOAD \
-    -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017 
+    -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017  \
+    -p rethinkdb.read_policy=$READ_POLICY
 
 pkill -f rethinkdb
 

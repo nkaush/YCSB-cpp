@@ -130,6 +130,7 @@ if (BIND_RETHINKDB)
     add_dependencies(ycsb librethinkdb++)
 
     target_link_libraries(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx/build/librethinkdb++.a)
+    target_link_libraries(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/hash/MurmurHash3.cpp)
     target_include_directories(ycsb PRIVATE ${PROJECT_SOURCE_DIR}/rethinkdb/librethinkdbxx/build/include)
 else()
     message(STATUS "BIND_RETHINKDB - OFF")

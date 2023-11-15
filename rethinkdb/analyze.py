@@ -23,7 +23,7 @@ phase = args.phase
 workload = args.workload
 read_policy = args.readpolicy
 if (phase != "load" and phase != "run") or workload == "none" or read_policy == "none":
-    print("Usage: ./analyze.py -p <load | run> -i <workload> -rp <random | roundrobin>")
+    print("Usage: ./analyze.py -p <load | run> -i <workload> -rp <random | roundrobin | hash>")
     exit(1)
 
 

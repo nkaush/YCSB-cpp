@@ -21,7 +21,7 @@ const string PROP_READ_MODE_DEFAULT = "outdated";
 const std::array<string, 3> READ_MODES = {"single", "majority", "outdated"};
 
 const string PROP_READ_POLICY = "rethinkdb.read_policy";
-const string PROP_READ_POLICY_DEFAULT = "round_robin";
+const string PROP_READ_POLICY_DEFAULT = "roundrobin";
 
 namespace ycsbc {
 
@@ -72,12 +72,14 @@ void RethinkDBBinding::Init() {
         cl.emplace_back(R::connect(hp.first, hp.second));
     });
 
-    if (read_policy == "round_robin") {
+    if (read_policy == "roundrobin") {
         rp_ = std::make_unique<RoundRoubinReadPolicy>(std::move(cl));
     } else if (read_policy == "random") {
         rp_ = std::make_unique<RandomReadPolicy>(std::move(cl));
+    }  else if (read_policy == "hash") {
+        rp_ = std::make_unique<HashReadPolicy>(std::move(cl));
     } else {
-        throw std::runtime_error("rethinkdb.read_policy must be one of [ round_robin | random ]");
+        throw std::runtime_error("rethinkdb.read_policy must be one of [ roundrobin | random | hash ]");
     }
 
     durability_ = R::Term(durability);
@@ -90,7 +92,7 @@ DB::Status RethinkDBBinding::Read(const string &table,
                                   std::vector<Field> &result) {
     R::Cursor cursor = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
-        .run(rp_->GetNext());
+        .run(rp_->GetNext(key));
 
     if (!cursor.is_single()) {
         throw std::runtime_error("Expected a single document");
@@ -122,7 +124,7 @@ DB::Status RethinkDBBinding::Update(const string &table,
     R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
         .update(to_update, {{DURABILITY_OPT_ARG, durability_}})
-        .run(rp_->GetNext())
+        .run(rp_->GetNext(key))
         .to_datum();
 
     auto inserted = result.extract_field("inserted").extract_number() == 0.0;
@@ -142,7 +144,7 @@ DB::Status RethinkDBBinding::Insert(const string &table,
 
     R::Datum result = R::table(table)
         .insert(to_insert, {{DURABILITY_OPT_ARG, durability_}})
-        .run(rp_->GetNext())
+        .run(rp_->GetNext(key))
         .to_datum();
     
     auto inserted = result.extract_field("inserted").extract_number();
@@ -158,7 +160,7 @@ DB::Status RethinkDBBinding::Delete(const string &table,
     R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
         .get(key)
         .delete_({{DURABILITY_OPT_ARG, durability_}})
-        .run(rp_->GetNext())
+        .run(rp_->GetNext(key))
         .to_datum();
     
     auto deleted = result.extract_field("deleted").extract_number();

@@ -3,7 +3,9 @@
 
 #include <memory>
 #include <random>
+#include <functional>
 
+#include "hash/MurmurHash3.h"
 #include "rethinkdb.h"
 
 namespace ycsbc {
@@ -14,8 +16,8 @@ class ReadPolicy {
 
     ReadPolicy(ConnectionList&& cl) : cl_(std::forward<ConnectionList>(cl)) {}
     virtual ~ReadPolicy() {}
-    virtual size_t Next() = 0;
-    RethinkDB::Connection& GetNext() { return *cl_[Next()]; }
+    virtual size_t Next(const std::string& key) = 0;
+    RethinkDB::Connection& GetNext(const std::string& key) { return *cl_[Next(key)]; }
   protected:
     size_t num_connections() const { return cl_.size(); }
   private:
@@ -27,7 +29,7 @@ class RoundRoubinReadPolicy : public ReadPolicy {
     RoundRoubinReadPolicy(ReadPolicy::ConnectionList&& cl) 
       : ReadPolicy(std::forward<ReadPolicy::ConnectionList>(cl)), rri_(0) {}
 
-    size_t Next() {
+    size_t Next(const std::string& key) {
       size_t ret = rri_;
       rri_ = (rri_ + 1) % num_connections();
       return ret;
@@ -40,9 +42,26 @@ class RandomReadPolicy : public ReadPolicy {
   public:
     RandomReadPolicy(ConnectionList&& cl) : ReadPolicy(std::forward<ReadPolicy::ConnectionList>(cl)) {}
     
-    size_t Next() {
-      return rand() % num_connections();
+    size_t Next(const std::string& key) {
+      std::random_device rd;  // a seed source for the random number engine
+      std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
+      std::uniform_int_distribution<> distrib(0, num_connections());
+      return distrib(gen);
     };
+};
+
+class HashReadPolicy : public ReadPolicy {
+  public:
+    HashReadPolicy(ConnectionList&& cl) : ReadPolicy(std::forward<ReadPolicy::ConnectionList>(cl)) {}
+    
+    size_t Next(const std::string& key) {
+      size_t hash_result;
+
+      MurmurHash3_x86_32(&key, 32, 0, &hash_result);
+      return hash_result % num_connections();
+    };
+  private:
+    std::hash<std::string> hash_function_;
 };
 
 }  // namespace ycsbc
