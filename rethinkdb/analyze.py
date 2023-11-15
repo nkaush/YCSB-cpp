@@ -13,6 +13,7 @@ def parse_args(args_list: List[str]):
 
     parser.add_argument("-p", "--phase", type=str, default="load")
     parser.add_argument("-i", "--workload", type=str, default="none")
+    parser.add_argument("-rp", "--readpolicy", type=str, default="none")
 
     return parser.parse_args(args_list)
 
@@ -20,8 +21,9 @@ def parse_args(args_list: List[str]):
 args = parse_args(sys.argv[1:])
 phase = args.phase
 workload = args.workload
-if (phase != "load" and phase != "run") or workload == "none":
-    print("Usage: ./analyze.py -p <load or run> -i <workload>")
+read_policy = args.readpolicy
+if (phase != "load" and phase != "run") or workload == "none" or read_policy == "none":
+    print("Usage: ./analyze.py -p <load | run> -i <workload> -rp <random | roundrobin>")
     exit(1)
 
 
@@ -46,7 +48,6 @@ if __name__ == "__main__":
 
     if phase == "load":
         for loaddump in glob.glob(f"dumps/load-*"):
-            _, nodenum = loaddump.split("-")
 
             cachecontents = []
             for filename in os.listdir(loaddump):
@@ -64,7 +65,6 @@ if __name__ == "__main__":
 
     if phase == "run":
         for rundump in glob.glob(f"dumps/run-*"):
-            _, nodenum = rundump.split("-")
 
             cachecontents = []
             for filename in os.listdir(rundump):
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
 
     # for key in caches:
-    with open(f"dumps/similarity-{workload}", "w", encoding="utf8") as f:
+    with open(f"dumps/similarity-{workload}-{read_policy}", "w", encoding="utf8") as f:
         similarity = find_similarity_new(keys_found_iter)
         print(f"Similarity for {phase} phase on workload {workload} was {similarity}")
-        f.write(f"Similarity for {phase} phase on workload {workload} was {similarity}")
+        f.write(str(similarity))

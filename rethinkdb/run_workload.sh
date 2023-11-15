@@ -3,8 +3,8 @@
 echo -n > Missrate.txt
 
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <workload file> <read policy>"
-    exit 1
+    echo "Usage: $0 <workload file> <random | roundrobin>"
+    return
 fi
 
 # Access the command-line arguments
@@ -17,10 +17,14 @@ export WORKLOAD=$1
 length=${#WORKLOAD}
 export WORKLOAD_NUM=${WORKLOAD:length-1:1}
 export READ_POLICY=$2
-export COUNTER_FILE="dumps/counter.txt"
 
-LOAD_DIR="dumps/load-$WORKLOAD_NUM"
-RUN_DIR="dumps/run-$WORKLOAD_NUM"
+if [ "$READ_POLICY" != "random" ] && [ "$READ_POLICY" != "roundrobin" ]; then
+    echo "Usage: $0 <workload file> <random | roundrobin>"
+    return
+fi
+
+LOAD_DIR="dumps/load-$WORKLOAD_NUM-$READ_POLICY"
+RUN_DIR="dumps/run-$WORKLOAD_NUM-$READ_POLICY"
 
 if [ ! -d "$LOAD_DIR" ]; then
     mkdir "$LOAD_DIR"
@@ -65,8 +69,8 @@ echo "Killed rethink"
 # 5. Run ~/rethinkdb/aggregatemissrate.py to retrieve miss rate
 sleep 10
 echo "AGGREGATING AFTER LOAD"
-python3 $MISS_RATE_AGGREGATOR -p load -f "dumps/mrate-$WORKLOAD_NUM"
-mv cache-0x* dumps/load-$WORKLOAD_NUM
+python3 $MISS_RATE_AGGREGATOR -p load -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY"
+mv cache-0x* $LOAD_DIR
 # 6. Run analyze.py to retrieve similarity
 # python3 analyze.py -p 
 
@@ -87,7 +91,7 @@ pkill -f rethinkdb
 
 sleep 10
 
-python3 $MISS_RATE_AGGREGATOR -p run -f "dumps/mrate-$WORKLOAD_NUM"
-mv cache-0x* dumps/run-$WORKLOAD_NUM || true
-python3 analyze.py -p run -i $WORKLOAD_NUM
+python3 $MISS_RATE_AGGREGATOR -p run -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY"
+mv cache-0x* $RUN_DIR || true
+python3 analyze.py -p run -i $WORKLOAD_NUM -rp $READ_POLICY
 rm -rf node-*/*
