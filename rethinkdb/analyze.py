@@ -47,7 +47,7 @@ if __name__ == "__main__":
     keys_found = []
 
     if phase == "load":
-        for loaddump in glob.glob(f"dumps/load-*"):
+        for loaddump in glob.glob(f"dumps/load-{workload}-{read_policy}"):
 
             cachecontents = []
             for filename in os.listdir(loaddump):
@@ -64,8 +64,7 @@ if __name__ == "__main__":
             keys_found += keys_found_iter
 
     if phase == "run":
-        for rundump in glob.glob(f"dumps/run-*"):
-
+        for rundump in glob.glob(f"dumps/run-{workload}-{read_policy}"):
             cachecontents = []
             for filename in os.listdir(rundump):
                 # Check if the current item is a file
@@ -83,6 +82,6 @@ if __name__ == "__main__":
 
     # for key in caches:
     with open(f"dumps/similarity-{workload}-{read_policy}", "w", encoding="utf8") as f:
-        similarity = find_similarity_new(keys_found_iter)
+        similarity = find_similarity_new(keys_found)
         print(f"Similarity for {phase} phase on workload {workload} was {similarity}")
         f.write(str(similarity))
