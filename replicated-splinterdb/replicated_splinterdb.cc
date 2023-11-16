@@ -14,8 +14,9 @@ const std::string PROP_READ_POLICY = "replicated_splinterdb.read_policy";
 const std::string PROP_READ_POLICY_DEFAULT = "round_robin";
 const std::map<std::string, read_algorithm> READ_ALGORITHMS = {
     {"hash", read_algorithm::hash},
-    {"random", read_algorithm::random},
-    {"round_robin", read_algorithm::round_robin}
+    {"round_robin", read_algorithm::round_robin},
+    {"random_token", read_algorithm::random_token},
+    {"random_uniform", read_algorithm::random_uniform}
 };
 
 namespace ycsbc {
