@@ -3,10 +3,12 @@
 
 #include <memory>
 #include <random>
-#include <functional>
+#include <iostream>
 
 #include "hash/MurmurHash3.h"
 #include "rethinkdb.h"
+
+#define MMHSEED 1234567890U
 
 namespace ycsbc {
 
@@ -17,7 +19,9 @@ class ReadPolicy {
     ReadPolicy(ConnectionList&& cl) : cl_(std::forward<ConnectionList>(cl)) {}
     virtual ~ReadPolicy() {}
     virtual size_t Next(const std::string& key) = 0;
-    RethinkDB::Connection& GetNext(const std::string& key) { return *cl_[Next(key)]; }
+    RethinkDB::Connection& GetNext(const std::string& key) { 
+      size_t next = Next(key);
+      return *cl_[next]; }
   protected:
     size_t num_connections() const { return cl_.size(); }
   private:
@@ -43,25 +47,27 @@ class RandomReadPolicy : public ReadPolicy {
     RandomReadPolicy(ConnectionList&& cl) : ReadPolicy(std::forward<ReadPolicy::ConnectionList>(cl)) {}
     
     size_t Next(const std::string& key) {
-      std::random_device rd;  // a seed source for the random number engine
-      std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
-      std::uniform_int_distribution<> distrib(0, num_connections());
-      return distrib(gen);
+      std::random_device rd;
+      std::mt19937 mt(rd());
+      int upper_bound = num_connections()-1;
+      int lower_bound = 0;
+
+      std::uniform_int_distribution<> distribution(lower_bound, upper_bound);
+      int randnum = distribution(mt);
+      return static_cast<size_t>(randnum);
     };
 };
 
 class HashReadPolicy : public ReadPolicy {
   public:
     HashReadPolicy(ConnectionList&& cl) : ReadPolicy(std::forward<ReadPolicy::ConnectionList>(cl)) {}
-    
-    size_t Next(const std::string& key) {
-      size_t hash_result;
 
-      MurmurHash3_x86_32(&key, 32, 0, &hash_result);
-      return hash_result % num_connections();
+    size_t Next(const std::string& key) {
+      uint32_t hash;
+
+      MurmurHash3_x86_32(key.data(), static_cast<int>(key.size()), MMHSEED, &hash);
+      return hash % num_connections();
     };
-  private:
-    std::hash<std::string> hash_function_;
 };
 
 }  // namespace ycsbc

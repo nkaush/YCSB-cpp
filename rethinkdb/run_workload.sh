@@ -11,7 +11,6 @@ fi
 
 RETHINKDB="$HOME/rethinkdb/build/release/rethinkdb"
 MISS_RATE_AGGREGATOR="aggregatemissrate.py"
-export DRIVERPORTS=("50000" "50001" "50002")
 export LOCALHOST="localhost"
 export WORKLOAD=$1
 length=${#WORKLOAD}
@@ -36,7 +35,7 @@ fi
 
 # 1. Start 3 rethink servers on localhost, with different ports
 function start_cluster() {
-    for index in "${!DRIVERPORTS[@]}"
+    for index in {0..2};
     do
         if [ ! -d "node-$index" ]; then
             mkdir "node-$index"
