@@ -1,4 +1,5 @@
 import sys
+import re
 import argparse
 
 from typing import List
@@ -6,16 +7,39 @@ from typing import List
 def parse_args(args_list: List[str]):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-o", "--numops", type=int, default=12000000)
     parser.add_argument("-p", "--phase", type=str, default="load")
     parser.add_argument("-f", "--file", type=str, default="dumps/nofilepath.txt")
+    parser.add_argument("-w", "--workload", type=str, default="workloads/workloada")
+    parser.add_argument("-nr", "--numreplicas", type=int, default=3)
 
     return parser.parse_args(args_list)
 
 
+def get_num_ops(workload: str, phase: str, num_replicas: int=3) -> int:
+	with open(workload, "r", encoding="utf8") as f:
+		file_data = f.read()
+		opct_pattern = r'operationcount=\d+'
+		rfr_pattern=r'readproportion=\d+\.?\d*'
+
+
+		opct_matches = re.findall(opct_pattern, file_data)
+		rfr_matches = re.findall(rfr_pattern, file_data)
+
+		if len(opct_matches) > 0 and len(rfr_matches) > 0:
+			opct = float(opct_matches[0][15:])
+			rfr = float(rfr_matches[0][15:])
+
+			if phase == "load":
+				return opct * num_replicas
+			
+			return (opct * rfr * num_replicas) + (opct * (rfr - 1))
+
+
+
 args = parse_args(sys.argv[1:])
-total_opps = 0
 phase = args.phase
+workload = args.workload
+total_opps = get_num_ops(workload, phase)
 total_miss = 0
 
 line = "f"
@@ -25,8 +49,6 @@ with open("Missrate.txt", "r") as f:
 		try:
 			chunks=line.split(" ")
 			mrate=int(chunks[3])
-			total_opps+=int(chunks[1])
-			# mrate = int(line.split(":")[1])
 		except:
 			break
 		total_miss+=mrate

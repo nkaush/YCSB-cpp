@@ -9,5 +9,6 @@ do
     for policy in "${POLICIES[@]}"
     do
         $RUN_WORKLOAD "$workload" "$policy"
+        sleep 10
     done
 done
