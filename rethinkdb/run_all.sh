@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 RUN_WORKLOAD="source run_workload.sh"
-WORKLOADS=("workloads/workloada" "workloads/workloadb" "workloads/workloadc" "workloads/workloadd" "workloads/workloadf")
+WORKLOADS=("workloads/workloadd")
 POLICIES=("roundrobin" "hash" "random")
 
 for workload in "${WORKLOADS[@]}"
@@ -12,3 +12,5 @@ do
         sleep 10
     done
 done
+
+python3 graph.py

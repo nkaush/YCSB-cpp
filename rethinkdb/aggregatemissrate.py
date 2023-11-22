@@ -14,13 +14,11 @@ def parse_args(args_list: List[str]):
 
     return parser.parse_args(args_list)
 
-
 def get_num_ops(workload: str, phase: str, num_replicas: int=3) -> int:
 	with open(workload, "r", encoding="utf8") as f:
 		file_data = f.read()
 		opct_pattern = r'operationcount=\d+'
 		rfr_pattern=r'readproportion=\d+\.?\d*'
-
 
 		opct_matches = re.findall(opct_pattern, file_data)
 		rfr_matches = re.findall(rfr_pattern, file_data)
@@ -29,9 +27,9 @@ def get_num_ops(workload: str, phase: str, num_replicas: int=3) -> int:
 			opct = float(opct_matches[0][15:])
 			rfr = float(rfr_matches[0][15:])
 
-			if phase == "load":
+			if phase == "load" or workload[-1] == 'a' or workload[-1] == 'f':
 				return opct * num_replicas
-			
+
 			return (opct * rfr * num_replicas) + (opct * (rfr - 1))
 
 

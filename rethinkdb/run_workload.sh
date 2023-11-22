@@ -73,8 +73,9 @@ echo "Killed rethink"
 # 5. Run ~/rethinkdb/aggregatemissrate.py to retrieve miss rate
 sleep 10
 echo "AGGREGATING AFTER LOAD"
-python3 $MISS_RATE_AGGREGATOR -p load -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY"
+python3 $MISS_RATE_AGGREGATOR -p load -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY" -w $WORKLOAD
 mv cache-0x* $LOAD_DIR
+cp Missrate.txt "dumps/totalmisses-$WORKLOAD_NUM-$READ_POLICY-load"
 # 6. Run analyze.py to retrieve similarity
 # python3 analyze.py -p 
 
@@ -96,7 +97,8 @@ pkill -f rethinkdb
 
 sleep 10
 
-python3 $MISS_RATE_AGGREGATOR -p run -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY"
+python3 $MISS_RATE_AGGREGATOR -p run -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY" -w $WORKLOAD
+cp Missrate.txt "dumps/totalmisses-$WORKLOAD_NUM-$READ_POLICY-run"
 mv cache-0x* $RUN_DIR || true
 python3 analyze.py -p run -i $WORKLOAD_NUM -rp $READ_POLICY
 rm -rf node-*/*

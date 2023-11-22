@@ -83,5 +83,9 @@ if __name__ == "__main__":
     # for key in caches:
     with open(f"dumps/similarity-{workload}-{read_policy}", "w", encoding="utf8") as f:
         similarity = find_similarity_new(keys_found)
-        print(f"Similarity for {phase} phase on workload {workload} was {similarity}")
+        print(f"Similarity for {phase} phase on workload {workload} was {similarity}, with {len(keys_found)} keys in cache")
         f.write(str(similarity))
+    
+    with open(f"dumps/keys_cached-{workload}-{read_policy}", "w", encoding="utf8") as f:
+        num_keys = len(keys_found)
+        f.write(num_keys)
