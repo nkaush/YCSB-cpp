@@ -20,15 +20,25 @@ def get_similarity(workload: str, read_policy: str) -> float:
 
         return similarity
 
+def get_keys_cached(workload: str, read_policy: str) -> int:
+    with open(f"dumps/keys_cached-{workload}-{read_policy}", "r", encoding="utf8") as f:
+        filedump = f.read()
+        keys_cached = int(filedump)
+
+        return keys_cached
+
+workload_to_keys_cached = {}
 
 for workload in workloads:
     workload_to_mrate = {}
+
     for read_policy in read_policies:
         run_missrate = get_run_miss_rate(workload, read_policy)
         similarity = get_similarity(workload, read_policy)
+        keys_cached = get_keys_cached(workload, read_policy)
 
+        workload_to_keys_cached[workload] = keys_cached
         workload_to_mrate[read_policy] = (run_missrate, similarity)
-    
 
     labels, values = zip(*[(value[0], value[1]) for _, value in workload_to_mrate.items()])
 
@@ -43,7 +53,16 @@ for workload in workloads:
         label, value = workload_to_mrate[policy]
         plt.text(label, value, f'{policy}', ha='right', va='bottom')
 
-    # Saving the plot
+    # Saving the miss rate vs similarity plot
     plt.savefig(f'plot-{workload}.png')
-    plt.clf() 
+    plt.clf()
 
+categories, values = list(workload_to_keys_cached.keys()), list(workload_to_keys_cached.values())
+plt.bar(categories, values)
+
+plt.xlabel('Workload')
+plt.ylabel('Num keys cached')
+plt.title('Number of keys cached across workloads')
+
+plt.savefig(f'plot-kcached.png')
+plt.clf()
