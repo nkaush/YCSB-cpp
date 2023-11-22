@@ -88,4 +88,4 @@ if __name__ == "__main__":
     
     with open(f"dumps/keys_cached-{workload}-{read_policy}", "w", encoding="utf8") as f:
         num_keys = len(keys_found)
-        f.write(num_keys)
+        f.write(str(num_keys))
