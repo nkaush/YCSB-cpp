@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 
 workloads = ['a', 'b', 'c', 'd', 'f']
+# workloads = ['d']
 read_policies = ['random', 'roundrobin', 'hash']
+# read_policies = ['hash']
 
 def get_run_miss_rate(workload: str, read_policy: str) -> float:
     with open(f"dumps/mrate-{workload}-{read_policy}", "r", encoding="utf8") as f:
@@ -56,13 +58,3 @@ for workload in workloads:
     # Saving the miss rate vs similarity plot
     plt.savefig(f'plot-{workload}.png')
     plt.clf()
-
-categories, values = list(workload_to_keys_cached.keys()), list(workload_to_keys_cached.values())
-plt.bar(categories, values)
-
-plt.xlabel('Workload')
-plt.ylabel('Num keys cached')
-plt.title('Number of keys cached across workloads')
-
-plt.savefig(f'plot-kcached.png')
-plt.clf()

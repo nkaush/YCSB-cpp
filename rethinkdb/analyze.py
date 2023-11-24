@@ -14,6 +14,7 @@ def parse_args(args_list: List[str]):
     parser.add_argument("-p", "--phase", type=str, default="load")
     parser.add_argument("-i", "--workload", type=str, default="none")
     parser.add_argument("-rp", "--readpolicy", type=str, default="none")
+    parser.add_argument("-s", "--cachesize", type=int, default=150)
 
     return parser.parse_args(args_list)
 
@@ -22,6 +23,7 @@ args = parse_args(sys.argv[1:])
 phase = args.phase
 workload = args.workload
 read_policy = args.readpolicy
+cache_size = args.cachesize
 if (phase != "load" and phase != "run") or workload == "none" or read_policy == "none":
     print("Usage: ./analyze.py -p <load | run> -i <workload> -rp <random | roundrobin | hash>")
     exit(1)
@@ -86,6 +88,6 @@ if __name__ == "__main__":
         print(f"Similarity for {phase} phase on workload {workload} was {similarity}, with {len(keys_found)} keys in cache")
         f.write(str(similarity))
     
-    with open(f"dumps/keys_cached-{workload}-{read_policy}", "w", encoding="utf8") as f:
+    with open(f"dumps/keys_cached-{workload}-{read_policy}-{cache_size}", "w", encoding="utf8") as f:
         num_keys = len(keys_found)
         f.write(str(num_keys))

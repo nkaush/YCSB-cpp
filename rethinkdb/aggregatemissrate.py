@@ -11,6 +11,7 @@ def parse_args(args_list: List[str]):
     parser.add_argument("-f", "--file", type=str, default="dumps/nofilepath.txt")
     parser.add_argument("-w", "--workload", type=str, default="workloads/workloada")
     parser.add_argument("-nr", "--numreplicas", type=int, default=3)
+    parser.add_argument("-rp", "--readpolicy", type=str)
 
     return parser.parse_args(args_list)
 
@@ -32,16 +33,15 @@ def get_num_ops(workload: str, phase: str, num_replicas: int=3) -> int:
 
 			return (opct * rfr * num_replicas) + (opct * (rfr - 1))
 
-
-
 args = parse_args(sys.argv[1:])
 phase = args.phase
 workload = args.workload
+read_policy = args.readpolicy
 total_opps = get_num_ops(workload, phase)
 total_miss = 0
 
 line = "f"
-with open("Missrate.txt", "r") as f:
+with open(f"dumps/totalmisses-{workload[-1]}-{read_policy}-{phase}", "r") as f:
 	while line != "":
 		line = f.readline()
 		try:
