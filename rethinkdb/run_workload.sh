@@ -23,12 +23,19 @@ fi
 LOAD_DIR="dumps/load-$WORKLOAD_NUM-$READ_POLICY"
 RUN_DIR="dumps/run-$WORKLOAD_NUM-$READ_POLICY"
 
+CACHED_RUN=0
+CACHED_LOAD=0
+
 if [ ! -d "$LOAD_DIR" ]; then
     mkdir "$LOAD_DIR"
+else
+    CACHED_LOAD=1
 fi
 
 if [ ! -d "$RUN_DIR" ]; then
     mkdir "$RUN_DIR"
+else
+    CACHED_RUN=1
 fi
 
 # 1. Start 3 rethink servers on localhost, with different ports
@@ -49,52 +56,59 @@ function start_cluster() {
     done
 }
 
-start_cluster
-sleep 5
+if [ "$CACHED_LOAD" -eq 0 ]; then
+    start_cluster
+    sleep 5
+    # 2. call usertable drop then create
+    ./usertable.py drop
+    ./usertable.py create
 
-# 2. call usertable drop then create
-./usertable.py drop
-./usertable.py create
+    echo -n > Missrate.txt
 
-echo -n > Missrate.txt
+    # 3. run ycsb workload load phase 
+    ../build/ycsb -s -db rethinkdb -load -threads 50 \
+        -P $WORKLOAD \
+        -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017 \
+        -p rethinkdb.read_policy=$READ_POLICY
 
-# 3. run ycsb workload load phase 
-../build/ycsb -s -db rethinkdb -load -threads 50 \
-    -P $WORKLOAD \
-    -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017 \
-    -p rethinkdb.read_policy=$READ_POLICY
+    # 4. After load is done, kill all 3 rethink servers. WARNING, This will kill ALL rethinkdb instances, not just the ones spawned by this script. Use the pid array for more granularity.
+    pkill -f rethinkdb
+    echo "Killed rethink"
 
-# 4. After load is done, kill all 3 rethink servers. WARNING, This will kill ALL rethinkdb instances, not just the ones spawned by this script. Use the pid array for more granularity.
-pkill -f rethinkdb
-echo "Killed rethink"
+    # 5. Run ~/rethinkdb/aggregatemissrate.py to retrieve miss rate
+    sleep 10
+    echo "AGGREGATING AFTER LOAD"
+    mv cache-0x* $LOAD_DIR
+    cp Missrate.txt "dumps/totalmisses-$WORKLOAD_NUM-$READ_POLICY-load"
+    python3 $MISS_RATE_AGGREGATOR -p load -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY" -w $WORKLOAD -rp $READ_POLICY
 
-# 5. Run ~/rethinkdb/aggregatemissrate.py to retrieve miss rate
-sleep 10
-echo "AGGREGATING AFTER LOAD"
-mv cache-0x* $LOAD_DIR
-cp Missrate.txt "dumps/totalmisses-$WORKLOAD_NUM-$READ_POLICY-load"
-python3 $MISS_RATE_AGGREGATOR -p load -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY" -w $WORKLOAD -rp $READ_POLICY
+    sleep 10
+else
+    echo "Found cached load files. Continuing without load phase"
+fi
 
-sleep 10
-# 7. Restart cluster
-echo -n > Missrate.txt
-echo "STARTING NEW CLUSTER"
-start_cluster
+if [ "$CACHED_RUN" -eq 0 ]; then
+    # 7. Restart cluster
+    echo -n > Missrate.txt
+    echo "STARTING NEW CLUSTER"
+    start_cluster
 
-sleep 10
+    sleep 10
+    # 8. Run ycsb workload run phase, repeat steps 4-6 for the run phase. NO NEED ANYMORE, OG COMMAND RUNS BOTH
+    ../build/ycsb -s -db rethinkdb -t -threads 20 \
+        -P $WORKLOAD \
+        -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017  \
+        -p rethinkdb.read_policy=$READ_POLICY
 
-# 8. Run ycsb workload run phase, repeat steps 4-6 for the run phase. NO NEED ANYMORE, OG COMMAND RUNS BOTH
-../build/ycsb -s -db rethinkdb -t -threads 20 \
-    -P $WORKLOAD \
-    -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017  \
-    -p rethinkdb.read_policy=$READ_POLICY
+    pkill -f rethinkdb
 
-pkill -f rethinkdb
+    sleep 10
 
-sleep 10
-
-cp Missrate.txt "dumps/totalmisses-$WORKLOAD_NUM-$READ_POLICY-run"
-mv cache-0x* $RUN_DIR || true
-python3 $MISS_RATE_AGGREGATOR -p run -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY" -w $WORKLOAD -rp $READ_POLICY
-python3 analyze.py -p run -i $WORKLOAD_NUM -rp $READ_POLICY
-rm -rf node-*/*
+    cp Missrate.txt "dumps/totalmisses-$WORKLOAD_NUM-$READ_POLICY-run"
+    mv cache-0x* $RUN_DIR || true
+    python3 $MISS_RATE_AGGREGATOR -p run -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY" -w $WORKLOAD -rp $READ_POLICY
+    python3 analyze.py -p run -i $WORKLOAD_NUM -rp $READ_POLICY
+    rm -rf node-*/*
+else
+    echo "Found cached run files. Continuing without load phase"
+fi

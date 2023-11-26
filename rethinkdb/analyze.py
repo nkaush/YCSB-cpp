@@ -48,38 +48,29 @@ def find_similarity_new(keylist: List[str], num_replicas: int=3) -> float:
 if __name__ == "__main__":
     keys_found = []
 
+    dumpfile: str
     if phase == "load":
-        for loaddump in glob.glob(f"dumps/load-{workload}-{read_policy}"):
+        dumpfile = f"dumps/load-{workload}-{read_policy}"
+    elif phase == "run":
+        dumpfile = f"dumps/run-{workload}-{read_policy}"
+    else:
+        print("ERROR: Phase provided to analyze.py was not 'run' or 'load'")
+        exit()
 
-            cachecontents = []
-            for filename in os.listdir(loaddump):
-                # Check if the current item is a file
-                abs_path = os.path.join(loaddump, filename)
-                if os.path.isfile(abs_path):
-                    with open(abs_path, "rb") as f:
-                        cachecontents.append(f.read())
+    for dump in glob.glob(dumpfile):
+        cachecontents = []
+        for filename in os.listdir(dump):
+            # Check if the current item is a file
+            abs_path = os.path.join(dump, filename)
+            if os.path.isfile(abs_path):
+                with open(abs_path, "rb") as f:
+                    cachecontents.append(f.read())
 
-            cachecontents = b"".join(cachecontents)
-            regex = b"id\x06\x18user\d{20}"
-            regex_matches = re.findall(regex, cachecontents)
-            keys_found_iter = list(m[4:].decode("utf-8") for m in regex_matches)
-            keys_found += keys_found_iter
-
-    if phase == "run":
-        for rundump in glob.glob(f"dumps/run-{workload}-{read_policy}"):
-            cachecontents = []
-            for filename in os.listdir(rundump):
-                # Check if the current item is a file
-                abs_path = os.path.join(rundump, filename)
-                if os.path.isfile(abs_path):
-                    with open(abs_path, "rb") as f:
-                        cachecontents.append(f.read())
-
-            cachecontents = b"".join(cachecontents)
-            regex = b"id\x06\x18user\d{20}"
-            regex_matches = re.findall(regex, cachecontents)
-            keys_found_iter = list(m[4:].decode("utf-8") for m in regex_matches)
-            keys_found += keys_found_iter
+        cachecontents = b"".join(cachecontents)
+        regex = b"id\x06\x18user\d{20}"
+        regex_matches = re.findall(regex, cachecontents)
+        keys_found_iter = list(m[4:].decode("utf-8") for m in regex_matches)
+        keys_found += keys_found_iter
 
 
     # for key in caches:
