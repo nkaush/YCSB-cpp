@@ -95,7 +95,7 @@ if [ "$CACHED_RUN" -eq 0 ]; then
 
     sleep 10
     # 8. Run ycsb workload run phase, repeat steps 4-6 for the run phase. NO NEED ANYMORE, OG COMMAND RUNS BOTH
-    ../build/ycsb -s -db rethinkdb -t -threads 20 \
+    ../build/ycsb -s -db rethinkdb -t -threads 50 \
         -P $WORKLOAD \
         -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017  \
         -p rethinkdb.read_policy=$READ_POLICY

@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 RUN_WORKLOAD="source run_workload.sh"
-# WORKLOADS=("workloads/workloada" "workloads/workloadb" "workloads/workloadc" "workloads/workloadd" "workloads/workloadf")
-WORKLOADS=("workloads/workloadd")
+WORKLOADS=("workloads/workloada" "workloads/workloadb" "workloads/workloadc" "workloads/workloadd" "workloads/workloadf")
 POLICIES=("roundrobin" "hash" "random")
 
 for workload in "${WORKLOADS[@]}"

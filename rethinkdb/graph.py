@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 
-workloads = ['a', 'b', 'c', 'd', 'f']
-# workloads = ['d']
-read_policies = ['random', 'roundrobin', 'hash']
-# read_policies = ['hash']
+WORKLOADS = ['a', 'b', 'c', 'd', 'f']
+READ_POLICIES = ['random', 'roundrobin', 'hash']
+CACHE_SIZE=150
 
 def get_run_miss_rate(workload: str, read_policy: str) -> float:
     with open(f"dumps/mrate-{workload}-{read_policy}", "r", encoding="utf8") as f:
@@ -22,8 +21,8 @@ def get_similarity(workload: str, read_policy: str) -> float:
 
         return similarity
 
-def get_keys_cached(workload: str, read_policy: str) -> int:
-    with open(f"dumps/keys_cached-{workload}-{read_policy}", "r", encoding="utf8") as f:
+def get_keys_cached(workload: str, read_policy: str, cache_size: int = CACHE_SIZE) -> int:
+    with open(f"dumps/keys_cached-{workload}-{read_policy}-{cache_size}", "r", encoding="utf8") as f:
         filedump = f.read()
         keys_cached = int(filedump)
 
@@ -31,10 +30,10 @@ def get_keys_cached(workload: str, read_policy: str) -> int:
 
 workload_to_keys_cached = {}
 
-for workload in workloads:
+for workload in WORKLOADS:
     workload_to_mrate = {}
 
-    for read_policy in read_policies:
+    for read_policy in READ_POLICIES:
         run_missrate = get_run_miss_rate(workload, read_policy)
         similarity = get_similarity(workload, read_policy)
         keys_cached = get_keys_cached(workload, read_policy)

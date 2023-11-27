@@ -98,13 +98,12 @@ DB::Status RethinkDBBinding::Read(const string &table,
         throw std::runtime_error("Expected a single document");
     }
 
-    R::Datum document = std::move(cursor).to_datum();
+    R::Datum document = cursor.to_datum();
 
     if (fields == nullptr) {
         for (auto& [f, v] : document.extract_object()) {
             result.emplace_back(f, v.extract_string());
         }
-    } else {
         for (const string& f : *fields) {
             result.emplace_back(f, document.extract_field(f).extract_string());
         }
