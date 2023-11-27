@@ -66,3 +66,4 @@ sleep 10
 mv cache-0x* $LOAD_DIR
 cp Missrate.txt "dumps/totalmisses-$WORKLOAD_NUM-$READ_POLICY-load"
 python3 analyze.py -p load -i $WORKLOAD_NUM -rp $READ_POLICY -s $CACHE_SIZE
+rm -rf node-*/*
