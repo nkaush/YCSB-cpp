@@ -21,6 +21,9 @@ const std::map<std::string, read_algorithm> READ_ALGORITHMS = {
 
 namespace ycsbc {
 
+using replicated_splinterdb::rpc_read_result;
+using replicated_splinterdb::rpc_mutation_result;
+
 void ReplicatedSplinterDB::Init() {
     const utils::Properties &props = *props_;
     std::string host = props.GetProperty(PROP_HOST, PROP_HOST_DEFAULT);
@@ -44,11 +47,10 @@ DB::Status ReplicatedSplinterDB::Read(const std::string &table,
                                       const std::string &key,
                                       const std::vector<std::string> *fields,
                                       std::vector<Field> &result) {
-    auto [value, spl_rc] = client_->get(key);
+    rpc_read_result retrieval = client_->get(key);
 
-    if (!value.empty()) {
-        std::string field(value.begin(), value.end());
-        result.emplace_back("", field);
+    if (!retrieval.value().empty()) {
+        result.emplace_back("", retrieval.value());
     }
 
     return DB::kOK;
@@ -62,16 +64,17 @@ DB::Status ReplicatedSplinterDB::Insert(const std::string &table,
     }
 
     auto& [field, value] = values[0];
-    auto [spl_rc, raft_rc, msg] = client_->put(key, value);
+    rpc_mutation_result res = client_->put(key, value);
 
-    if (raft_rc != 0) {
-        std::cerr << "Replication error: " << msg << " (rc=" << raft_rc 
-                    << ")" << std::endl;
+    if (res.raft_rc() != 0) {
+        std::cerr << "Replication error: " << res.raft_msg() << " (rc=" 
+                  << res.raft_rc() << ")" << std::endl;
         return DB::kError;
     }
 
-    if (spl_rc != 0) {
-        std::cerr << "SplinterDB error (rc=" << spl_rc << ")" << std::endl;
+    if (res.splinterdb_rc() != 0) {
+        std::cerr << "SplinterDB error (rc=" << res.splinterdb_rc() << ")" 
+                  << std::endl;
         return DB::kError;
     }
 
@@ -81,16 +84,17 @@ DB::Status ReplicatedSplinterDB::Insert(const std::string &table,
 DB::Status ReplicatedSplinterDB::Delete(const std::string &table,
                                         const std::string &key) {
     std::vector<uint8_t> key_vec(key.begin(), key.end());
-    auto [spl_rc, raft_rc, msg] = client_->del(key);
+    rpc_mutation_result res = client_->del(key);
 
-    if (raft_rc != 0) {
-        std::cerr << "Replication error: " << msg << " (rc=" << raft_rc 
-                    << ")" << std::endl;
+    if (res.raft_rc() != 0) {
+        std::cerr << "Replication error: " << res.raft_msg() << " (rc=" 
+                  << res.raft_rc() << ")" << std::endl;
         return DB::kError;
     }
 
-    if (spl_rc != 0) {
-        std::cerr << "SplinterDB error (rc=" << spl_rc << ")" << std::endl;
+    if (res.splinterdb_rc() != 0) {
+        std::cerr << "SplinterDB error (rc=" << res.splinterdb_rc() << ")" 
+                  << std::endl;
         return DB::kError;
     }
 
