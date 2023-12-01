@@ -8,6 +8,7 @@ export LD=clang
 export CXX=clang++
 git clone https://github.com/nkaush/YCSB-cpp.git
 cd YCSB-cpp && mkdir build && cd build
+git submodule update --init --recursive
 sudo ../replicated-splinterdb/replicated-splinterdb/setup_server.sh
 cmake -DBIND_SPLINTERDB=ON .. && make -j `nproc` \
     && make -j `nproc` spl-client \
