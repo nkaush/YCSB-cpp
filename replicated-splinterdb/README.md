@@ -1,5 +1,19 @@
 # replicated-splinterdb YCSB Binding
 
+## Building:
+
+```bash
+export CC=clang
+export LD=clang
+export CXX=clang++
+git clone https://github.com/nkaush/YCSB-cpp.git
+cd YCSB-cpp && mkdir build && cd build
+sudo ../replicated-splinterdb/replicated-splinterdb/setup_server.sh
+cmake -DBIND_SPLINTERDB=ON .. && make -j `nproc` \
+    && make -j `nproc` spl-client \
+    && mv ./replicated-splinterdb/replicated-splinterdb/apps/spl-client .
+```
+
 ## Sample Usage:
 
 ```bash
@@ -9,16 +23,4 @@ docker run -it --rm --network splinterdb-network neilk3/ycsb-replicated-splinter
 ## Sample CLI Client
 ```bash
 ./replicated-splinterdb/client.sh 1 -e ls
-```
-
-## Debug
-
-```bash
-docker network create splinterdb-network
-docker run --rm -it \
-    --name "replicated-splinterdb-node-1" \
-    --hostname "replicated-splinterdb-node-1" \
-    --network splinterdb-network \
-    --entrypoint /bin/bash \
-    neilk3/replicated-splinterdb
 ```
