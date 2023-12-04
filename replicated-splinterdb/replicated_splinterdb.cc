@@ -49,7 +49,7 @@ DB::Status ReplicatedSplinterDB::Read(const std::string &table,
                                       std::vector<Field> &result) {
     rpc_read_result retrieval = client_->get(key);
 
-    if (!retrieval.value().empty()) {
+    if (retrieval.rc() == 0 && !retrieval.value().empty()) {
         result.emplace_back("", retrieval.value());
     }
 
