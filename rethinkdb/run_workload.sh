@@ -47,10 +47,10 @@ function start_cluster() {
         fi
 
         if [ "$index" -eq 0 ]; then
-            $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 150 --bind all &
+            $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 250 --bind all &
             sleep 1
         else
-            $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 150 -j "$LOCALHOST" --bind all &
+            $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 250 -j "$LOCALHOST" --bind all &
             sleep 1
         fi
     done
