@@ -14,7 +14,7 @@ def parse_args(args_list: List[str]):
     parser.add_argument("-p", "--phase", type=str, default="load")
     parser.add_argument("-i", "--workload", type=str, default="none")
     parser.add_argument("-rp", "--readpolicy", type=str, default="none")
-    parser.add_argument("-s", "--cachesize", type=int, default=150)
+    parser.add_argument("-s", "--cachesize", type=int, default=250)
 
     return parser.parse_args(args_list)
 

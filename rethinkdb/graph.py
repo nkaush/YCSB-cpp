@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 WORKLOADS = ['a', 'b', 'c', 'd', 'f']
 READ_POLICIES = ['random', 'roundrobin', 'hash']
-CACHE_SIZE=150
+CACHE_SIZE=250
 
 def get_run_miss_rate(workload: str, read_policy: str) -> float:
     with open(f"dumps/mrate-{workload}-{read_policy}", "r", encoding="utf8") as f:

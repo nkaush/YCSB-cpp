@@ -44,6 +44,8 @@ line = "f"
 with open(f"dumps/totalmisses-{workload[-1]}-{read_policy}-{phase}", "r") as f:
 	while line != "":
 		line = f.readline()
+		if not line:
+            		break
 		try:
 			chunks=line.split(" ")
 			mrate=int(chunks[3])
