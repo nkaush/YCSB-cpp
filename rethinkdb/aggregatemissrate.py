@@ -42,21 +42,25 @@ total_miss = 0
 
 line = "f"
 with open(f"dumps/totalmisses-{workload[-1]}-{read_policy}-{phase}", "r") as f:
-	while line != "":
+	while True:
+
 		line = f.readline()
 		if not line:
             		break
 		try:
-			chunks=line.split(" ")
-			mrate=int(chunks[3])
+			chunks=line.split(":")
+			mrate=int(chunks[-1])
 		except:
 			break
+
 		total_miss+=mrate
 
+if args.file != "dumps/nofilepath.txt":
+	f = open(args.file, "a")
+else:
+	file=f"dumps/mrate-{workload[-1]}-{read_policy}"
+	f = open(file, "a")
 
-print(total_opps)
-
-
-with open(args.file, "a") as f:
-	print(f"total misses in {phase} phase = {total_miss}. Total opps in the {phase} phase = {total_opps} Miss rate = {total_miss/total_opps}")
-	f.write(f"{phase}={total_miss/total_opps}\n")
+print(f"total misses in {phase} phase = {total_miss}. Total opps in the {phase} phase = {total_opps} Miss rate = {total_miss/total_opps}")
+f.write(f"{phase}={total_miss/total_opps}\n")
+f.close()
