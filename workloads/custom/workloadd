@@ -3,7 +3,7 @@
 #   Application example: user status updates; people want to read the latest
 #                        
 #   Read/update/insert ratio: 95/0/5
-#   Default data size: 1 KB records (10 fields, 100 bytes each, plus key)
+#   Default data size: 1 KB records
 #   Request distribution: latest
 
 # The insert order for this is hashed, not ordered. The "latest" items may be 
@@ -11,8 +11,6 @@
 # which orders items purely by time, and demands the latest, is very different than 
 # workload here (which we believe is more typical of how people build systems.)
 
-recordcount=700000
-fieldlength=1024
 fieldcount=1
 zeropadding=20
 requestdistribution=latest
