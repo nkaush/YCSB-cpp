@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 echo -n > Missrate.txt
+echo -n > readmiss.txt
+echo -n > writemiss.txt
 
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <workload file> <random | roundrobin | hash>"
@@ -47,10 +49,10 @@ function start_cluster() {
         fi
 
         if [ "$index" -eq 0 ]; then
-            $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 250 --bind all &
+            $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 150 --bind all &
             sleep 1
         else
-            $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 250 -j "$LOCALHOST" --bind all &
+            $RETHINKDB --directory "node-$index" --port-offset $index --cache-size 150 -j "$LOCALHOST" --bind all &
             sleep 1
         fi
     done
@@ -66,7 +68,7 @@ if [ "$CACHED_LOAD" -eq 0 ]; then
     echo -n > Missrate.txt
 
     # 3. run ycsb workload load phase 
-    ../build/ycsb -s -db rethinkdb -load -threads 50 \
+    ../build/ycsb -s -db rethinkdb -load -threads 40 \
         -P $WORKLOAD \
         -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017 \
         -p rethinkdb.read_policy=$READ_POLICY
@@ -81,7 +83,7 @@ if [ "$CACHED_LOAD" -eq 0 ]; then
     mv cache-0x* $LOAD_DIR
     cp Missrate.txt "dumps/totalmisses-$WORKLOAD_NUM-$READ_POLICY-load"
     python3 $MISS_RATE_AGGREGATOR -p load -f "dumps/mrate-$WORKLOAD_NUM-$READ_POLICY" -w $WORKLOAD -rp $READ_POLICY
-
+    python3 tmp.py
     sleep 10
 else
     echo "Found cached load files. Continuing without load phase"
@@ -95,7 +97,7 @@ if [ "$CACHED_RUN" -eq 0 ]; then
 
     sleep 10
     # 8. Run ycsb workload run phase, repeat steps 4-6 for the run phase. NO NEED ANYMORE, OG COMMAND RUNS BOTH
-    ../build/ycsb -s -db rethinkdb -t -threads 50 \
+    ../build/ycsb -s -db rethinkdb -t -threads 40 \
         -P $WORKLOAD \
         -p rethinkdb.hosts=$LOCALHOST:28015,$LOCALHOST:28016,$LOCALHOST:28017  \
         -p rethinkdb.read_policy=$READ_POLICY
@@ -112,3 +114,5 @@ if [ "$CACHED_RUN" -eq 0 ]; then
 else
     echo "Found cached run files. Continuing without load phase"
 fi
+
+python3 tmp.py -w $WORKLOAD -p run -rp $READ_POLICY
