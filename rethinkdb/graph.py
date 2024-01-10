@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from typing import Dict
 
 WORKLOADS = ['a', 'b', 'c', 'd', 'f']
 READ_POLICIES = ['random', 'roundrobin', 'hash']
@@ -12,6 +13,20 @@ def get_run_miss_rate(workload: str, read_policy: str) -> float:
         finalres = res.split("run=")[1]
 
         return float(finalres)
+
+def get_new_mrate() -> Dict[str, float]:
+    rv = {}
+    
+    with open("dumps/missratesnew.txt", "r") as f:
+        lines = f.read().splitlines()
+        
+        for line in lines:
+            workload_info, num_waits, num_accesses = line.split(":")
+            workload, rp, _ = workload_info.split("-")
+            
+            rv[f"{workload}-{rp}"] = float(num_waits) / float(num_accesses)
+    
+    return rv        
 
 
 def get_similarity(workload: str, read_policy: str) -> float:
@@ -29,16 +44,18 @@ def get_keys_cached(workload: str, read_policy: str, cache_size: int = CACHE_SIZ
         return keys_cached
 
 workload_to_keys_cached = {}
+new_workload_to_mrate = get_new_mrate()
 
 for workload in WORKLOADS:
     workload_to_mrate = {}
 
     for read_policy in READ_POLICIES:
-        run_missrate = get_run_miss_rate(workload, read_policy)
+        # run_missrate = get_run_miss_rate(workload, read_policy)
         similarity = get_similarity(workload, read_policy)
         keys_cached = get_keys_cached(workload, read_policy)
 
         workload_to_keys_cached[workload] = keys_cached
+        run_missrate = new_workload_to_mrate[f"{workload}-{read_policy}"]
         workload_to_mrate[read_policy] = (run_missrate, similarity)
 
     labels, values = zip(*[(value[0], value[1]) for _, value in workload_to_mrate.items()])

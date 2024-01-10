@@ -20,7 +20,8 @@ read_policy = args.readpolicy
 with open("readmiss.txt") as fp:
     data = fp.read()
     one = data.count("1")
-    two = data.count("2")
+    # two = data.count("2")
+    two=4000000
     print(f"One: {one}, Two: {two}")
-    with open("missratesnew.txt", "a") as f:
-        f.write(f"{workload}-{read_policy}-{phase}: {one/two}")
+    with open("dumps/missratesnew.txt", "a") as f:
+        f.write(f"{workload}-{read_policy}-{phase}:{one}:{two}:{one/two}")
