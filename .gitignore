@@ -18,3 +18,5 @@ build/
 analyze/
 log/
 uftrace*
+node-*/*
+cache-0x*
