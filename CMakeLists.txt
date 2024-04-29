@@ -196,6 +196,11 @@ endif()
 
 add_subdirectory(HdrHistogram_c)
 include_directories(HdrHistogram_c/include)
+
+add_subdirectory(yaml-cpp)
+include_directories(yaml-cpp/include)
+
 add_compile_definitions(HDRMEASUREMENT)
 add_dependencies(ycsb hdr_histogram_static)
 target_link_libraries(ycsb PRIVATE hdr_histogram_static)
+target_link_libraries(ycsb PRIVATE yaml-cpp)
