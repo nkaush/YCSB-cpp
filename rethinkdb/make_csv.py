@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from analyze import find_similarity_union, find_similarity_intersection
+from analyze import find_similarity_union, find_similarity_intersection, find_union
 from os.path import exists, getsize, join, isfile
 from typing import List, Dict
 from pandas import DataFrame
@@ -68,6 +68,7 @@ for path in tqdm(glob("dumps-*/similarity-*")):
 
     similarity_intersection = find_similarity_intersection(keysets)
     similarity_union = find_similarity_union(keysets)
+    cef = len(find_union(keysets)) / 100_000
 
     with open(similarity_path, "r") as f:
         similarity = float(f.read())
@@ -93,6 +94,7 @@ for path in tqdm(glob("dumps-*/similarity-*")):
         "Value Size (Bytes)": valuesize,
         "Read Policy": read_policy,
         "Workload": workload_name,
+        "CEF": cef,
         "Similarity (Union)": similarity,
         "Similarity (Intersection)": similarity_intersection,
         "Cluster Miss Rate": miss_rate
