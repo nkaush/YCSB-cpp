@@ -9,7 +9,7 @@ def parse_args(args_list: List[str]):
 
     parser.add_argument("-p", "--phase", type=str, default="load")
     parser.add_argument("-f", "--file", type=str, default="dumps/nofilepath.txt")
-    parser.add_argument("-w", "--workload", type=str, default="workloads/workloada")
+    parser.add_argument("-w", "--workload", type=str, default="workloads/uniform-a")
     parser.add_argument("-nr", "--numreplicas", type=int, default=3)
     parser.add_argument("-rp", "--readpolicy", type=str)
 
@@ -29,9 +29,9 @@ def get_num_ops(workload: str, phase: str, num_replicas: int=3) -> int:
 			rfr = float(rfr_matches[0][15:])
 
 			if phase == "load" or workload[-1] == 'a' or workload[-1] == 'f':
-				return opct * num_replicas
+				return (opct * num_replicas)
 
-			return (opct * rfr * num_replicas) + (opct * (rfr - 1))
+			return (opct * rfr) + ((1 - rfr) * opct * num_replicas)
 
 args = parse_args(sys.argv[1:])
 phase = args.phase
@@ -41,12 +41,13 @@ total_opps = get_num_ops(workload, phase)
 total_miss = 0
 
 line = "f"
-with open(f"dumps/totalmisses-{workload[-1]}-{read_policy}-{phase}", "r") as f:
+workload_name = workload.split("/")[-1]
+with open(f"dumps/totalmisses-{workload_name}-{read_policy}-{phase}", "r") as f:
 	while True:
 
 		line = f.readline()
 		if not line:
-            		break
+			break
 		try:
 			chunks=line.split(":")
 			mrate=int(chunks[-1])
@@ -58,7 +59,7 @@ with open(f"dumps/totalmisses-{workload[-1]}-{read_policy}-{phase}", "r") as f:
 if args.file != "dumps/nofilepath.txt":
 	f = open(args.file, "a")
 else:
-	file=f"dumps/mrate-{workload[-1]}-{read_policy}"
+	file=f"dumps/mrate-{workload_name}-{read_policy}"
 	f = open(file, "a")
 
 print(f"total misses in {phase} phase = {total_miss}. Total opps in the {phase} phase = {total_opps} Miss rate = {total_miss/total_opps}")

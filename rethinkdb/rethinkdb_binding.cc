@@ -90,26 +90,32 @@ DB::Status RethinkDBBinding::Read(const string &table,
                                   const string &key,
                                   const std::vector<string> *fields,
                                   std::vector<Field> &result) {
-    R::Cursor cursor = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
-        .get(key)
-        .run(rp_->GetNext(key));
+    try {
+        R::Cursor cursor = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
+            .get(key)
+            .run(rp_->GetNext(key));
 
-    if (!cursor.is_single()) {
-        throw std::runtime_error("Expected a single document");
-    }
-
-    R::Datum document = cursor.to_datum();
-
-    if (fields == nullptr) {
-        for (auto& [f, v] : document.extract_object()) {
-            result.emplace_back(f, v.extract_string());
+        if (!cursor.is_single()) {
+            throw std::runtime_error("Expected a single document");
         }
-        for (const string& f : *fields) {
-            result.emplace_back(f, document.extract_field(f).extract_string());
-        }
-    }
 
-    return DB::kOK;
+        R::Datum document = cursor.to_datum();
+
+        if (fields == nullptr) {
+            for (auto& [f, v] : document.extract_object()) {
+                result.emplace_back(f, v.extract_string());
+            }
+        } else {
+            for (const string& f : *fields) {
+                result.emplace_back(f, document.extract_field(f).extract_string());
+            }
+        }
+
+        return DB::kOK;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
 }
 
 DB::Status RethinkDBBinding::Update(const string &table,
@@ -120,11 +126,17 @@ DB::Status RethinkDBBinding::Update(const string &table,
         to_update.emplace(f, R::Datum(v));
     }
 
-    R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
-        .get(key)
-        .update(to_update, {{DURABILITY_OPT_ARG, durability_}})
-        .run(rp_->GetNext(key))
-        .to_datum();
+    R::Datum result;
+    try {
+        result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
+            .get(key)
+            .update(to_update, {{DURABILITY_OPT_ARG, durability_}})
+            .run(rp_->GetNext(key))
+            .to_datum();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
 
     auto inserted = result.extract_field("inserted").extract_number() == 0.0;
     auto deleted = result.extract_field("deleted").extract_number() == 0.0;
@@ -141,10 +153,16 @@ DB::Status RethinkDBBinding::Insert(const string &table,
         to_insert.emplace(f, R::Datum(v));
     }
 
-    R::Datum result = R::table(table)
-        .insert(to_insert, {{DURABILITY_OPT_ARG, durability_}})
-        .run(rp_->GetNext(key))
-        .to_datum();
+    R::Datum result;
+    try {
+        result = R::table(table)
+            .insert(to_insert, {{DURABILITY_OPT_ARG, durability_}})
+            .run(rp_->GetNext(key))
+            .to_datum();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
     
     auto inserted = result.extract_field("inserted").extract_number();
     if (static_cast<int>(inserted) != 1) {
@@ -156,11 +174,17 @@ DB::Status RethinkDBBinding::Insert(const string &table,
 
 DB::Status RethinkDBBinding::Delete(const string &table,
                                         const string &key) {
-    R::Datum result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
-        .get(key)
-        .delete_({{DURABILITY_OPT_ARG, durability_}})
-        .run(rp_->GetNext(key))
-        .to_datum();
+    R::Datum result;
+    try {
+        result = R::table(table, {{READ_MODE_OPT_ARG, read_mode_}})
+            .get(key)
+            .delete_({{DURABILITY_OPT_ARG, durability_}})
+            .run(rp_->GetNext(key))
+            .to_datum();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
     
     auto deleted = result.extract_field("deleted").extract_number();
     if (static_cast<int>(deleted) != 1) {

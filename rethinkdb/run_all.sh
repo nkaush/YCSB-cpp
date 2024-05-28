@@ -1,8 +1,22 @@
 #!/usr/bin/env bash
 
+set -e
+
 RUN_WORKLOAD="source run_workload.sh"
-WORKLOADS=("workloads/workloada" "workloads/workloadb" "workloads/workloadc" "workloads/workloadd" "workloads/workloadf")
-POLICIES=("roundrobin" "hash" "random")
+WORKLOADS=(
+    # "workloads/zipfian-a"
+    # "workloads/zipfian-b"
+    # "workloads/zipfian-d"
+    # "workloads/zipfian-f"
+    # "workloads/zipfian-read"
+    # "workloads/uniform-a"
+    # "workloads/uniform-b"
+    # "workloads/uniform-d"
+    # "workloads/uniform-f"
+    "workloads/uniform-read"
+    "workloads/uniform-update"
+)
+POLICIES=("hash" "random")
 
 for workload in "${WORKLOADS[@]}"
 do

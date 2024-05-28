@@ -1,0 +1,26 @@
+# The number of fields in a record
+fieldcount=1
+
+# The key is prefixed with "user", so this brings the keylength to 24 bytes
+zeropadding=20
+
+# There is no default setting for recordcount but it is required to be set.
+# The number of records in the table to be inserted in the load phase or the
+# number of records already in the table before the run phase.
+recordcount=100000
+
+# There is no default setting for operationcount but it is required to be set.
+# The number of operations to use during the run phase.
+operationcount=500000
+
+workload=com.yahoo.ycsb.workloads.CoreWorkload
+
+readallfields=true
+
+readproportion=0.95
+updateproportion=0.05
+scanproportion=0
+insertproportion=0
+readmodifywriteproportion=0
+
+requestdistribution=uniform
