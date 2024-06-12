@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 namespace ycsbc {
 
@@ -96,6 +97,14 @@ class DB {
   /// @return Zero on success, a non-zero error code on error.
   ///
   virtual Status Delete(const std::string &table, const std::string &key) = 0;
+
+  /// 
+  /// A callback invoked after the load state and before the run stage.
+  /// This callback is only invoked if both the load and run stage are invoked.
+  ///
+  virtual void PostLoadCallback() {
+    std::cout << "base" << std::endl;
+  }
 
   virtual ~DB() { }
 

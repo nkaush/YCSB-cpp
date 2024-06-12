@@ -18,3 +18,5 @@ build/
 analyze/
 log/
 uftrace*
+
+.DS_Store
